@@ -1,1737 +1,2605 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenSquad — Your AI Squad</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root {
-  --bg: #0C0C0F;
-  --surface: #13131A;
-  --surface2: #1A1A24;
-  --border: #24242F;
-  --border2: #2E2E3D;
-  --text: #EEEEF5;
-  --text2: #8888A8;
-  --text3: #4A4A6A;
-  --accent: #6C63FF;
-  --accent2: #8B85FF;
-  --accent-glow: rgba(108,99,255,0.15);
-
-  --claude: #E8703A;
-  --claude-bg: rgba(232,112,58,0.08);
-  --claude-border: rgba(232,112,58,0.2);
-
-  --gpt: #19C37D;
-  --gpt-bg: rgba(25,195,125,0.08);
-  --gpt-border: rgba(25,195,125,0.2);
-
-  --grok: #9B7FFF;
-  --grok-bg: rgba(155,127,255,0.08);
-  --grok-border: rgba(155,127,255,0.2);
-
-  --gemini: #4A9EFF;
-  --gemini-bg: rgba(74,158,255,0.08);
-  --gemini-border: rgba(74,158,255,0.2);
-
-  --success: #19C37D;
-  --error: #FF5A5A;
-  --radius: 12px;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  height: 100%;
-  font-family: 'Outfit', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── UTILS ── */
-.hidden { display: none !important; }
-
-/* ── PAGES ── */
-.page { display: none; height: 100vh; }
-.page.active { display: flex; }
-
-/* ════════════════════════════════════
-   AUTH PAGE
-════════════════════════════════════ */
-#page-auth {
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-#page-auth::before {
-  content: '';
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -60%);
-  pointer-events: none;
-}
-
-.auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 44px 40px;
-  width: 420px;
-  max-width: 90vw;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
-}
-
-.auth-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 32px;
-}
-
-.auth-logo-mark {
-  width: 36px;
-  height: 36px;
-  background: var(--accent);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-.auth-logo-text {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.auth-logo-text span { color: var(--accent2); }
-
-.auth-title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-
-.auth-sub {
-  font-size: 14px;
-  color: var(--text2);
-  margin-bottom: 28px;
-  line-height: 1.5;
-}
-
-.field {
-  margin-bottom: 14px;
-}
-
-.field label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 7px;
-}
-
-.field input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border2);
-  color: var(--text);
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.field input:focus { border-color: var(--accent); }
-.field input::placeholder { color: var(--text3); }
-
-.btn-primary {
-  width: 100%;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 13px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 6px;
-  transition: all 0.15s;
-  letter-spacing: -0.2px;
-}
-
-.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.auth-switch {
-  text-align: center;
-  margin-top: 18px;
-  font-size: 13.5px;
-  color: var(--text2);
-}
-
-.auth-switch a {
-  color: var(--accent2);
-  cursor: pointer;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.auth-switch a:hover { text-decoration: underline; }
-
-.auth-error {
-  background: rgba(255,90,90,0.1);
-  border: 1px solid rgba(255,90,90,0.2);
-  color: #FF8A8A;
-  font-size: 13px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 14px;
-  display: none;
-}
-
-/* ════════════════════════════════════
-   CONNECT PAGE
-════════════════════════════════════ */
-#page-connect {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  position: relative;
-}
-
-#page-connect::before {
-  content: '';
-  position: absolute;
-  width: 800px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(108,99,255,0.07) 0%, transparent 70%);
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.connect-header {
-  text-align: center;
-  margin-bottom: 36px;
-  position: relative;
-  z-index: 1;
-}
-
-.connect-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.connect-logo-mark {
-  width: 42px;
-  height: 42px;
-  background: var(--accent);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.connect-logo-text {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.connect-logo-text span { color: var(--accent2); }
-
-.connect-title {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-
-.connect-sub {
-  font-size: 15px;
-  color: var(--text2);
-  line-height: 1.6;
-  max-width: 420px;
-  margin: 0 auto;
-}
-
-.connect-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  width: 100%;
-  max-width: 680px;
-  position: relative;
-  z-index: 1;
-}
-
-@media (max-width: 600px) {
-  .connect-grid { grid-template-columns: 1fr; }
-}
-
-.agent-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  transition: border-color 0.2s;
-}
-
-.agent-card.connected {
-  border-color: var(--success);
-  background: rgba(25,195,125,0.04);
-}
-
-.agent-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.agent-card-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.agent-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.agent-card[data-agent="claude"] .agent-dot { background: var(--claude); box-shadow: 0 0 8px var(--claude); }
-.agent-card[data-agent="gpt"]    .agent-dot { background: var(--gpt);    box-shadow: 0 0 8px var(--gpt); }
-.agent-card[data-agent="grok"]   .agent-dot { background: var(--grok);   box-shadow: 0 0 8px var(--grok); }
-.agent-card[data-agent="gemini"] .agent-dot { background: var(--gemini); box-shadow: 0 0 8px var(--gemini); }
-
-.agent-card-name {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-}
-
-.agent-card[data-agent="claude"] .agent-card-name { color: var(--claude); }
-.agent-card[data-agent="gpt"]    .agent-card-name { color: var(--gpt); }
-.agent-card[data-agent="grok"]   .agent-card-name { color: var(--grok); }
-.agent-card[data-agent="gemini"] .agent-card-name { color: var(--gemini); }
-
-.agent-status-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.3px;
-}
-
-.agent-status-badge.idle {
-  background: var(--surface2);
-  color: var(--text3);
-}
-
-.agent-status-badge.checking {
-  background: rgba(255,200,50,0.1);
-  color: #FFC832;
-}
-
-.agent-status-badge.ok {
-  background: rgba(25,195,125,0.12);
-  color: var(--success);
-}
-
-.agent-status-badge.fail {
-  background: rgba(255,90,90,0.1);
-  color: var(--error);
-}
-
-.agent-provider {
-  font-size: 11px;
-  color: var(--text3);
-  margin-bottom: 10px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.key-field {
-  display: flex;
-  gap: 8px;
-}
-
-.key-field input {
-  flex: 1;
-  background: var(--surface2);
-  border: 1.5px solid var(--border2);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.15s;
-  min-width: 0;
-}
-
-.key-field input:focus { border-color: var(--accent); }
-.key-field input::placeholder { color: var(--text3); }
-
-.btn-connect {
-  background: var(--surface2);
-  border: 1.5px solid var(--border2);
-  color: var(--text2);
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 9px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.btn-connect:hover { border-color: var(--accent); color: var(--accent2); }
-
-.agent-card.connected .btn-connect {
-  border-color: var(--success);
-  color: var(--success);
-}
-
-.get-key-link {
-  display: block;
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 8px;
-  text-decoration: none;
-  transition: color 0.12s;
-}
-
-.get-key-link:hover { color: var(--accent2); }
-
-.connect-footer {
-  margin-top: 28px;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
-
-.btn-enter-chat {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 40px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: -0.2px;
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-.btn-enter-chat.ready {
-  opacity: 1;
-  pointer-events: all;
-  box-shadow: 0 8px 32px rgba(108,99,255,0.3);
-}
-
-.btn-enter-chat.ready:hover { background: var(--accent2); transform: translateY(-2px); }
-
-.connect-note {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--text3);
-}
-
-.signout-link {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  font-size: 13px;
-  color: var(--text3);
-  cursor: pointer;
-  transition: color 0.12s;
-  z-index: 10;
-}
-
-.signout-link:hover { color: var(--text2); }
-
-/* ════════════════════════════════════
-   CHAT PAGE
-════════════════════════════════════ */
-#page-chat {
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* CHAT HEADER */
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  height: 58px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.chat-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.chat-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  cursor: pointer;
-}
-
-.chat-logo-mark {
-  width: 30px;
-  height: 30px;
-  background: var(--accent);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-}
-
-.chat-logo span { color: var(--accent2); }
-
-.active-agents {
-  display: flex;
-  gap: 6px;
-}
-
-.active-agent-pip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  user-select: none;
-}
-
-.active-agent-pip.off { opacity: 0.25; }
-
-.active-agent-pip[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
-.active-agent-pip[data-agent="gpt"]    { background: var(--gpt-bg);    color: var(--gpt);    border: 1px solid var(--gpt-border); }
-.active-agent-pip[data-agent="grok"]   { background: var(--grok-bg);   color: var(--grok);   border: 1px solid var(--grok-border); }
-.active-agent-pip[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
-
-.pip-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.chat-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btn-manage {
-  background: none;
-  border: 1px solid var(--border2);
-  color: var(--text2);
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.12s;
-}
-
-.btn-manage:hover { border-color: var(--accent); color: var(--accent2); }
-
-.btn-signout {
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-size: 13px;
-  cursor: pointer;
-  transition: color 0.12s;
-  padding: 4px;
-}
-
-.btn-signout:hover { color: var(--text2); }
-
-/* CHAT BODY */
-.chat-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 0 8px;
-  scroll-behavior: smooth;
-}
-
-.chat-body::-webkit-scrollbar { width: 4px; }
-.chat-body::-webkit-scrollbar-track { background: transparent; }
-.chat-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-.chat-inner {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-/* WELCOME SCREEN */
-.chat-welcome {
-  text-align: center;
-  padding: 60px 20px 20px;
-  animation: fade-up 0.4s ease;
-}
-
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.chat-welcome-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.chat-welcome h2 {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  margin-bottom: 8px;
-}
-
-.chat-welcome p {
-  font-size: 14px;
-  color: var(--text2);
-  line-height: 1.6;
-  max-width: 380px;
-  margin: 0 auto 20px;
-}
-
-.welcome-agents {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.welcome-agent-tag {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.welcome-agent-tag.claude { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
-.welcome-agent-tag.gpt    { background: var(--gpt-bg);    color: var(--gpt);    border: 1px solid var(--gpt-border); }
-.welcome-agent-tag.grok   { background: var(--grok-bg);   color: var(--grok);   border: 1px solid var(--grok-border); }
-.welcome-agent-tag.gemini { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
-
-/* MESSAGES */
-.msg-row {
-  display: flex;
-  flex-direction: column;
-  animation: msg-in 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
-}
-
-@keyframes msg-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.msg-row.user { align-items: flex-end; margin-top: 10px; }
-.msg-row.ai   { align-items: flex-start; margin-top: 6px; }
-
-.msg-meta {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 5px;
-  padding: 0 2px;
-}
-
-.agent-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.agent-avatar[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
-.agent-avatar[data-agent="gpt"]    { background: var(--gpt-bg);    color: var(--gpt);    border: 1px solid var(--gpt-border); }
-.agent-avatar[data-agent="grok"]   { background: var(--grok-bg);   color: var(--grok);   border: 1px solid var(--grok-border); }
-.agent-avatar[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
-
-.msg-sender {
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.msg-row[data-agent="claude"] .msg-sender { color: var(--claude); }
-.msg-row[data-agent="gpt"]    .msg-sender { color: var(--gpt); }
-.msg-row[data-agent="grok"]   .msg-sender { color: var(--grok); }
-.msg-row[data-agent="gemini"] .msg-sender { color: var(--gemini); }
-
-.msg-time {
-  font-size: 10px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.bubble {
-  max-width: 75%;
-  padding: 11px 15px;
-  border-radius: 14px;
-  font-size: 14px;
-  line-height: 1.65;
-  word-break: break-word;
-}
-
-.msg-row.user .bubble {
-  background: var(--accent);
-  color: white;
-  border-bottom-right-radius: 4px;
-}
-
-.msg-row.ai .bubble {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-bottom-left-radius: 4px;
-  color: var(--text);
-}
-
-.msg-row[data-agent="claude"] .bubble { border-left: 2px solid var(--claude); }
-.msg-row[data-agent="gpt"]    .bubble { border-left: 2px solid var(--gpt); }
-.msg-row[data-agent="grok"]   .bubble { border-left: 2px solid var(--grok); }
-.msg-row[data-agent="gemini"] .bubble { border-left: 2px solid var(--gemini); }
-
-/* TYPING */
-.typing-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  animation: msg-in 0.2s ease;
-}
-
-.typing-bubble {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 11px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 14px;
-  border-bottom-left-radius: 4px;
-}
-
-.typing-row[data-agent="claude"] .typing-bubble { border-left: 2px solid var(--claude); }
-.typing-row[data-agent="gpt"]    .typing-bubble { border-left: 2px solid var(--gpt); }
-.typing-row[data-agent="grok"]   .typing-bubble { border-left: 2px solid var(--grok); }
-.typing-row[data-agent="gemini"] .typing-bubble { border-left: 2px solid var(--gemini); }
-
-.t-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: t-bounce 1.2s infinite ease-in-out;
-}
-
-.typing-row[data-agent="claude"] .t-dot { background: var(--claude); }
-.typing-row[data-agent="gpt"]    .t-dot { background: var(--gpt); }
-.typing-row[data-agent="grok"]   .t-dot { background: var(--grok); }
-.typing-row[data-agent="gemini"] .t-dot { background: var(--gemini); }
-
-.t-dot:nth-child(2) { animation-delay: 0.18s; }
-.t-dot:nth-child(3) { animation-delay: 0.36s; }
-
-@keyframes t-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-5px); opacity: 1; }
-}
-
-.stream-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 14px;
-  border-radius: 1px;
-  margin-left: 1px;
-  vertical-align: text-bottom;
-  animation: cur-blink 0.7s infinite;
-}
-
-.msg-row[data-agent="claude"] .stream-cursor { background: var(--claude); }
-.msg-row[data-agent="gpt"]    .stream-cursor { background: var(--gpt); }
-.msg-row[data-agent="grok"]   .stream-cursor { background: var(--grok); }
-.msg-row[data-agent="gemini"] .stream-cursor { background: var(--gemini); }
-
-@keyframes cur-blink {
-  0%,49%{opacity:1} 50%,100%{opacity:0}
-}
-
-.sys-note {
-  text-align: center;
-  font-size: 11.5px;
-  color: var(--text3);
-  padding: 4px 0;
-  font-style: italic;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* CHAT INPUT */
-.chat-input-area {
-  padding: 12px 20px 18px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.chat-input-inner {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.tag-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  min-height: 0;
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.2s ease;
-}
-
-.tag-bar.visible {
-  max-height: 40px;
-}
-
-.tag-chip {
-  padding: 4px 11px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.12s;
-}
-
-.tag-chip[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border-color: var(--claude-border); }
-.tag-chip[data-agent="gpt"]    { background: var(--gpt-bg);    color: var(--gpt);    border-color: var(--gpt-border); }
-.tag-chip[data-agent="grok"]   { background: var(--grok-bg);   color: var(--grok);   border-color: var(--grok-border); }
-.tag-chip[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border-color: var(--gemini-border); }
-.tag-chip:hover { filter: brightness(1.2); }
-
-.input-wrap {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border2);
-  border-radius: 14px;
-  padding: 10px 10px 10px 16px;
-  transition: border-color 0.15s;
-}
-
-.input-wrap:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-textarea#chat-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  color: var(--text);
-  line-height: 1.5;
-  min-height: 22px;
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-textarea#chat-input::placeholder { color: var(--text3); }
-
-.send-btn {
-  width: 36px;
-  height: 36px;
-  background: var(--accent);
-  border: none;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-
-.send-btn:hover { background: var(--accent2); transform: scale(1.05); }
-.send-btn:active { transform: scale(0.95); }
-.send-btn:disabled { background: var(--border2); cursor: not-allowed; transform: none; }
-
-.send-btn svg { width: 15px; height: 15px; fill: white; }
-
-.input-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  padding: 0 2px;
-}
-
-.input-hint {
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.input-hint kbd {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 10px;
-}
-
-.default-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text3);
-}
-
-.default-wrap select {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text2);
-  font-size: 11px;
-  font-family: 'Outfit', sans-serif;
-  padding: 3px 8px;
-  border-radius: 6px;
-  outline: none;
-  cursor: pointer;
-}
-
-/* TOAST */
-.toast {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-size: 13px;
-  padding: 10px 18px;
-  border-radius: 10px;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s;
-  z-index: 999;
-  white-space: nowrap;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-</style>
-</head>
-<body>
-
-<!-- ══ AUTH PAGE ══ -->
-<div id="page-auth" class="page active">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-mark">⚡</div>
-      <div class="auth-logo-text">Open<span>Squad</span></div>
-    </div>
-
-    <div id="auth-error" class="auth-error"></div>
-
-    <!-- LOGIN -->
-    <div id="view-login">
-      <div class="auth-title">Welcome back</div>
-      <div class="auth-sub">Log in to your squad</div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="you@example.com" />
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" />
-      </div>
-      <button class="btn-primary" onclick="doLogin()">Log In</button>
-      <div class="auth-switch">Don't have an account? <a onclick="switchAuth('signup')">Sign up</a></div>
-    </div>
-
-    <!-- SIGNUP -->
-    <div id="view-signup" class="hidden">
-      <div class="auth-title">Create account</div>
-      <div class="auth-sub">Build your AI squad in minutes</div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="signup-email" placeholder="you@example.com" />
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="signup-password" placeholder="Min 6 characters" />
-      </div>
-      <button class="btn-primary" onclick="doSignup()">Create Account</button>
-      <div class="auth-switch">Already have an account? <a onclick="switchAuth('login')">Log in</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ CONNECT PAGE ══ -->
-<div id="page-connect" class="page">
-  <span class="signout-link" onclick="doSignout()">Sign out</span>
-
-  <div class="connect-header">
-    <div class="connect-logo">
-      <div class="connect-logo-mark">⚡</div>
-      <div class="connect-logo-text">Open<span>Squad</span></div>
-    </div>
-    <div class="connect-title">Connect your agents</div>
-    <div class="connect-sub">Paste your API keys below. Connect at least one agent to start chatting.</div>
-  </div>
-
-  <div class="connect-grid">
-    <div class="agent-card" data-agent="claude">
-      <div class="agent-card-header">
-        <div class="agent-card-left">
-          <div class="agent-dot"></div>
-          <div class="agent-card-name">Claude</div>
-        </div>
-        <div class="agent-status-badge idle" id="badge-claude">NOT CONNECTED</div>
-      </div>
-      <div class="agent-provider">Anthropic · claude-opus-4-6</div>
-      <div class="key-field">
-        <input type="password" id="input-claude" placeholder="sk-ant-..." />
-        <button class="btn-connect" onclick="connectAgent('claude')">Connect</button>
-      </div>
-      <a class="get-key-link" href="https://console.anthropic.com" target="_blank">↗ Get API key at console.anthropic.com</a>
-    </div>
-
-    <div class="agent-card" data-agent="gpt">
-      <div class="agent-card-header">
-        <div class="agent-card-left">
-          <div class="agent-dot"></div>
-          <div class="agent-card-name">GPT-4o</div>
-        </div>
-        <div class="agent-status-badge idle" id="badge-gpt">NOT CONNECTED</div>
-      </div>
-      <div class="agent-provider">OpenAI · gpt-4o</div>
-      <div class="key-field">
-        <input type="password" id="input-gpt" placeholder="sk-..." />
-        <button class="btn-connect" onclick="connectAgent('gpt')">Connect</button>
-      </div>
-      <a class="get-key-link" href="https://platform.openai.com/api-keys" target="_blank">↗ Get API key at platform.openai.com</a>
-    </div>
-
-    <div class="agent-card" data-agent="grok">
-      <div class="agent-card-header">
-        <div class="agent-card-left">
-          <div class="agent-dot"></div>
-          <div class="agent-card-name">Grok</div>
-        </div>
-        <div class="agent-status-badge idle" id="badge-grok">NOT CONNECTED</div>
-      </div>
-      <div class="agent-provider">xAI · grok-3-latest</div>
-      <div class="key-field">
-        <input type="password" id="input-grok" placeholder="xai-..." />
-        <button class="btn-connect" onclick="connectAgent('grok')">Connect</button>
-      </div>
-      <a class="get-key-link" href="https://console.x.ai" target="_blank">↗ Get API key at console.x.ai</a>
-    </div>
-
-    <div class="agent-card" data-agent="gemini">
-      <div class="agent-card-header">
-        <div class="agent-card-left">
-          <div class="agent-dot"></div>
-          <div class="agent-card-name">Gemini</div>
-        </div>
-        <div class="agent-status-badge idle" id="badge-gemini">NOT CONNECTED</div>
-      </div>
-      <div class="agent-provider">Google · gemini-2.0-flash</div>
-      <div class="key-field">
-        <input type="password" id="input-gemini" placeholder="AIza..." />
-        <button class="btn-connect" onclick="connectAgent('gemini')">Connect</button>
-      </div>
-      <a class="get-key-link" href="https://aistudio.google.com/apikey" target="_blank">↗ Get API key at aistudio.google.com</a>
-    </div>
-  </div>
-
-  <div class="connect-footer">
-    <button class="btn-enter-chat" id="btn-enter-chat" onclick="enterChat()">Enter Chat →</button>
-    <div class="connect-note">Keys are encrypted and saved to your account</div>
-  </div>
-</div>
-
-<!-- ══ CHAT PAGE ══ -->
-<div id="page-chat" class="page">
-  <div class="chat-header">
-    <div class="chat-header-left">
-      <div class="chat-logo" onclick="goToConnect()">
-        <div class="chat-logo-mark">⚡</div>
-        Open<span>Squad</span>
-      </div>
-      <div class="active-agents" id="active-agents-header"></div>
-    </div>
-    <div class="chat-header-right">
-      <button class="btn-manage" onclick="goToConnect()">Manage Agents</button>
-      <button class="btn-signout" onclick="doSignout()" title="Sign out">↗ out</button>
-    </div>
-  </div>
-
-  <div class="chat-body" id="chat-body">
-    <div class="chat-inner" id="chat-inner">
-      <div class="chat-welcome" id="chat-welcome">
-        <div class="chat-welcome-icon">⚡</div>
-        <h2>Your squad is ready</h2>
-        <p>Type anything — all connected agents reply at once. Tag <strong>@Claude</strong>, <strong>@Grok</strong> etc. to talk to just one.</p>
-        <div class="welcome-agents" id="welcome-agents"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="chat-input-area">
-    <div class="chat-input-inner">
-      <div class="tag-bar" id="tag-bar"></div>
-      <div class="input-wrap">
-        <textarea id="chat-input" placeholder="Message your squad..." rows="1"
-          onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>
-        <button class="send-btn" id="send-btn" onclick="sendMessage()">
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-      <div class="input-footer">
-        <span class="input-hint"><kbd>Enter</kbd> send · <kbd>Shift+Enter</kbd> newline · <kbd>@</kbd> tag agent</span>
-        <div class="default-wrap">
-          Default:
-          <select id="default-agent">
-            <option value="all">All agents</option>
-            <option value="claude" selected>Claude first</option>
-            <option value="gpt">GPT-4o first</option>
-            <option value="grok">Grok first</option>
-            <option value="gemini">Gemini first</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ══════════════════════════════════════════════════════
-// SUPABASE INIT
-// ══════════════════════════════════════════════════════
-const { createClient } = supabase;
-const sb = createClient(
-  'https://kidtboomnmefrhsogsaj.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZHRib29tbm1lZnJoc29nc2FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MTM0NjMsImV4cCI6MjA4NzE4OTQ2M30.oGouP4iW64wQGh4I4VNTrGMklO_iKkhSzOKCOKghqnM'
-);
-
-// ══════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════
-const APP = {
-  user: null,
-  keys: {},           // { claude: 'sk-ant-...', gpt: '...', ... }
-  active: {},         // { claude: true, gpt: false, ... }
-  history: {},        // per-agent message history
-  streaming: false,
-  currentConvId: null
-};
-
-// ══════════════════════════════════════════════════════
-// AGENT CONFIG
-// ══════════════════════════════════════════════════════
-const AGENTS = {
-  claude: {
-    label: 'Claude', initials: 'Cl',
-    model: 'claude-opus-4-6',
-    system: `You are Claude in an AI group chat (OpenSquad) alongside GPT-4o, Grok, and Gemini. Lead every response with your conclusion — the answer goes in sentence one, always. No preamble, no warm-ups, no "great question." State your verdict first, reasoning second. 2-4 sentences unless depth is genuinely needed. Thoughtful and precise. No AI disclaimers. Remember and reference everything in this conversation naturally.`,
-    endpoint: 'https://api.anthropic.com/v1/messages',
-    headers: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }),
-    buildBody: (msgs, model) => ({ model, max_tokens: 1024, stream: true, system: msgs[0].content, messages: msgs.slice(1) }),
-    parseChunk: line => { if (!line.startsWith('data: ')) return null; try { const d = JSON.parse(line.slice(6)); return d.type === 'content_block_delta' ? d.delta?.text : null; } catch { return null; } }
-  },
-  gpt: {
-    label: 'GPT-4o', initials: 'GP',
-    model: 'gpt-4o',
-    system: `You are GPT-4o in an AI group chat (OpenSquad) alongside Claude, Grok, and Gemini. Always lead with your conclusion — state what is true or what should be done in sentence one. No setup, no openers. Answer first, support second. 2-4 sentences. Polished and clear. No AI disclaimers. Reference prior conversation naturally.`,
-    endpoint: 'https://api.openai.com/v1/chat/completions',
-    headers: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    buildBody: (msgs, model) => ({ model, messages: msgs, stream: true, max_tokens: 1024 }),
-    parseChunk: line => { if (!line.startsWith('data: ') || line === 'data: [DONE]') return null; try { const d = JSON.parse(line.slice(6)); return d.choices?.[0]?.delta?.content || null; } catch { return null; } }
-  },
-  grok: {
-    label: 'Grok', initials: 'Gk',
-    model: 'grok-3-latest',
-    system: `You are Grok in an AI group chat (OpenSquad) alongside Claude, GPT-4o, and Gemini. Cut straight to the verdict in sentence one, always. No buildup. Sharp and direct, occasionally sarcastic when earned. Say the thing others won't. 1-3 sentences max. No AI disclaimers. Reference prior conversation naturally.`,
-    endpoint: 'https://api.x.ai/v1/chat/completions',
-    headers: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    buildBody: (msgs, model) => ({ model, messages: msgs, stream: true, max_tokens: 1024 }),
-    parseChunk: line => { if (!line.startsWith('data: ') || line === 'data: [DONE]') return null; try { const d = JSON.parse(line.slice(6)); return d.choices?.[0]?.delta?.content || null; } catch { return null; } }
-  },
-  gemini: {
-    label: 'Gemini', initials: 'Gm',
-    model: 'gemini-2.0-flash',
-    system: `You are Gemini in an AI group chat (OpenSquad) alongside Claude, GPT-4o, and Grok. Lead with the finding or recommendation in sentence one — always. Back it immediately with a specific number, comparison, or example. No preamble. Data-grounded and direct. 2-4 sentences. No AI disclaimers. Reference prior conversation naturally.`,
-    endpoint: k => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${k}`,
-    headers: () => ({ 'Content-Type': 'application/json' }),
-    buildBody: msgs => ({ system_instruction: { parts: [{ text: msgs[0].content }] }, contents: msgs.slice(1).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })) }),
-    parseChunk: line => { if (!line.startsWith('data: ')) return null; try { const d = JSON.parse(line.slice(6)); return d.candidates?.[0]?.content?.parts?.[0]?.text || null; } catch { return null; } }
-  }
-};
-
-const TAG_MAP = {
-  '@claude':'claude','claude,':'claude','claude:':'claude',
-  '@gpt':'gpt','@gpt-4':'gpt','gpt,':'gpt','gpt:':'gpt',
-  '@grok':'grok','grok,':'grok','grok:':'grok',
-  '@gemini':'gemini','gemini,':'gemini','gemini:':'gemini'
-};
-
-// ══════════════════════════════════════════════════════
-// PAGE ROUTING
-// ══════════════════════════════════════════════════════
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-}
-
-// ══════════════════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════════════════
-function switchAuth(view) {
-  document.getElementById('view-login').classList.toggle('hidden', view !== 'login');
-  document.getElementById('view-signup').classList.toggle('hidden', view !== 'signup');
-  document.getElementById('auth-error').style.display = 'none';
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
-  if (!email || !pass) { showAuthError('Please fill in all fields.'); return; }
-  const btn = document.querySelector('#view-login .btn-primary');
-  btn.disabled = true; btn.textContent = 'Logging in...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Log In';
-  if (error) { showAuthError(error.message); return; }
-  APP.user = data.user;
-  await loadUserKeys();
-  showPage('connect');
-}
-
-async function doSignup() {
-  const email = document.getElementById('signup-email').value.trim();
-  const pass  = document.getElementById('signup-password').value;
-  if (!email || !pass) { showAuthError('Please fill in all fields.'); return; }
-  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
-  const btn = document.querySelector('#view-signup .btn-primary');
-  btn.disabled = true; btn.textContent = 'Creating account...';
-  const { data, error } = await sb.auth.signUp({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Create Account';
-  if (error) { showAuthError(error.message); return; }
-  APP.user = data.user;
-  showToast('Account created! Connect your agents below.');
-  showPage('connect');
-}
-
-async function doSignout() {
-  await sb.auth.signOut();
-  APP.user = null; APP.keys = {}; APP.active = {};
-  showPage('auth');
-}
-
-// ══════════════════════════════════════════════════════
-// KEY MANAGEMENT
-// ══════════════════════════════════════════════════════
-async function loadUserKeys() {
-  if (!APP.user) return;
-  const { data } = await sb.from('user_keys').select('provider, api_key').eq('user_id', APP.user.id);
-  if (data) {
-    data.forEach(row => {
-      APP.keys[row.provider] = row.api_key;
-      APP.active[row.provider] = true;
-      markCardConnected(row.provider);
-    });
-  }
-  updateEnterBtn();
-}
-
-async function connectAgent(agent) {
-  const input = document.getElementById('input-' + agent);
-  const key = input.value.trim();
-  if (!key) { showToast('Paste your API key first'); return; }
-
-  const badge = document.getElementById('badge-' + agent);
-  badge.textContent = 'CHECKING...';
-  badge.className = 'agent-status-badge checking';
-
-  const valid = await validateKey(agent, key);
-
-  if (!valid) {
-    badge.textContent = 'INVALID KEY';
-    badge.className = 'agent-status-badge fail';
-    return;
-  }
-
-  // Save to Supabase
-  await sb.from('user_keys').upsert({
-    user_id: APP.user.id,
-    provider: agent,
-    api_key: key,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id,provider' });
-
-  APP.keys[agent] = key;
-  APP.active[agent] = true;
-  input.value = '';
-  markCardConnected(agent);
-  updateEnterBtn();
-  showToast(`${AGENTS[agent].label} connected ✓`);
-}
-
-async function validateKey(agent, key) {
-  try {
-    if (agent === 'claude') {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
-      });
-      return r.status !== 401;
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>OPENSQUAD | Your AI Squad. One Conversation.</title>
+  <meta name="description" content="Claude, GPT, Grok, and Gemini — all replying to the same message, at the same time. One thread. Full memory. Your API keys."/>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&family=Manrope:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-tint": "#ffb4a5",
+            "surface-container-low": "#1c1b1b",
+            "surface": "#131313",
+            "primary-fixed": "#ffdad3",
+            "primary-fixed-dim": "#ffb4a5",
+            "inverse-surface": "#e5e2e1",
+            "outline": "#ab8982",
+            "surface-container-lowest": "#0e0e0e",
+            "surface-bright": "#3a3939",
+            "outline-variant": "#5b403b",
+            "on-background": "#e5e2e1",
+            "surface-variant": "#353534",
+            "on-surface": "#e5e2e1",
+            "surface-container-highest": "#353534",
+            "primary-container": "#fe5738",
+            "surface-container-high": "#2a2a2a",
+            "inverse-primary": "#b72308",
+            "secondary": "#bcc6e2",
+            "primary": "#ffb4a5",
+            "on-surface-variant": "#e4beb7",
+            "tertiary": "#ccbdff",
+            "on-primary": "#650b00",
+            "error": "#ffb4ab",
+            "background": "#131313",
+            "on-primary-fixed": "#3e0400",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#201f1f",
+            "surface-dim": "#131313",
+          },
+          fontFamily: {
+            "headline": ["Epilogue"],
+            "body": ["Manrope"],
+            "label": ["Space Grotesk"]
+          },
+          borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+        },
+      },
     }
-    if (agent === 'gpt') {
-      const r = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({ model: 'gpt-4o', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
-      });
-      return r.status !== 401;
+  </script>
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
-    if (agent === 'grok') {
-      const r = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({ model: 'grok-3-latest', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
-      });
-      return r.status !== 401;
+
+    .lobster-gradient {
+      background: linear-gradient(135deg, #ffb4a5 0%, #fe5738 100%);
     }
-    if (agent === 'gemini') {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] })
-      });
-      return r.status !== 400 && r.status !== 403;
+
+    .ghost-border {
+      border: 1px solid rgba(91, 64, 59, 0.15);
     }
-  } catch { return false; }
-  return false;
-}
 
-function markCardConnected(agent) {
-  const card = document.querySelector(`.agent-card[data-agent="${agent}"]`);
-  const badge = document.getElementById('badge-' + agent);
-  if (card) card.classList.add('connected');
-  if (badge) { badge.textContent = 'CONNECTED'; badge.className = 'agent-status-badge ok'; }
-  const inp = document.getElementById('input-' + agent);
-  if (inp) inp.placeholder = '••••••••••• (saved)';
-}
+    .agent-claude  { border-left: 4px solid #E8703A; }
+    .agent-gpt     { border-left: 4px solid #19C37D; }
+    .agent-grok    { border-left: 4px solid #9B7FFF; }
+    .agent-gemini  { border-left: 4px solid #4A9EFF; }
 
-function updateEnterBtn() {
-  const connected = Object.keys(APP.keys).length > 0;
-  const btn = document.getElementById('btn-enter-chat');
-  btn.classList.toggle('ready', connected);
-}
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
 
-function enterChat() {
-  if (Object.keys(APP.keys).length === 0) return;
-  buildChatHeader();
-  buildWelcomeAgents();
-  buildTagBar();
-  showPage('chat');
-  document.getElementById('chat-input').focus();
-}
+    .animate-marquee {
+      display: flex;
+      width: max-content;
+      animation: marquee 22s linear infinite;
+    }
 
-function goToConnect() {
-  showPage('connect');
-}
+    .animate-marquee:hover { animation-play-state: paused; }
 
-// ══════════════════════════════════════════════════════
-// CHAT HEADER & WELCOME
-// ══════════════════════════════════════════════════════
-function buildChatHeader() {
-  const wrap = document.getElementById('active-agents-header');
-  wrap.innerHTML = '';
-  Object.keys(APP.keys).forEach(agent => {
-    const cfg = AGENTS[agent];
-    const pip = document.createElement('div');
-    pip.className = 'active-agent-pip';
-    pip.dataset.agent = agent;
-    pip.innerHTML = `<span class="pip-dot"></span>${cfg.label}`;
-    pip.onclick = () => {
-      APP.active[agent] = !APP.active[agent];
-      pip.classList.toggle('off', !APP.active[agent]);
-    };
-    if (!APP.active[agent]) pip.classList.add('off');
-    wrap.appendChild(pip);
-  });
-}
+    /* ── LIGHT MODE ── */
+    html:not(.dark) body {
+      background-color: #faf8f5;
+      color: #1a1410;
+    }
 
-function buildWelcomeAgents() {
-  const wrap = document.getElementById('welcome-agents');
-  wrap.innerHTML = '';
-  Object.keys(APP.keys).forEach(agent => {
-    const tag = document.createElement('span');
-    tag.className = `welcome-agent-tag ${agent}`;
-    tag.textContent = AGENTS[agent].label;
-    wrap.appendChild(tag);
-  });
-}
+    html:not(.dark) nav {
+      background-color: #faf8f5 !important;
+      border-color: rgba(91,64,59,0.15) !important;
+    }
 
-function buildTagBar() {
-  const bar = document.getElementById('tag-bar');
-  bar.innerHTML = '';
-  Object.keys(APP.keys).forEach(agent => {
-    const chip = document.createElement('div');
-    chip.className = 'tag-chip';
-    chip.dataset.agent = agent;
-    chip.textContent = `@${AGENTS[agent].label}`;
-    chip.onclick = () => insertTag(AGENTS[agent].label);
-    bar.appendChild(chip);
-  });
-}
+    html:not(.dark) .bg-surface            { background-color: #faf8f5 !important; }
+    html:not(.dark) .bg-surface-container  { background-color: #f0ece4 !important; }
+    html:not(.dark) .bg-surface-container-lowest { background-color: #ede8df !important; }
+    html:not(.dark) .bg-surface-container-high   { background-color: #e8e2d8 !important; }
+    html:not(.dark) .text-on-surface        { color: #1a1410 !important; }
+    html:not(.dark) .text-on-surface-variant{ color: #5a4a42 !important; }
+    html:not(.dark) .text-outline           { color: #8a5a50 !important; }
+    html:not(.dark) .bg-\[\#131313\]        { background-color: #faf8f5 !important; }
+    html:not(.dark) .bg-\[\#0e0e0e\]        { background-color: #ede8df !important; }
+    html:not(.dark) footer                  { background-color: #ede8df !important; }
+    html:not(.dark) .text-gray-500          { color: #7a6a60 !important; }
+    html:not(.dark) .text-on-primary-container { color: #3e0400 !important; }
+    html:not(.dark) .text-surface-container-high { color: #d0c8be !important; }
 
-// ══════════════════════════════════════════════════════
-// INPUT
-// ══════════════════════════════════════════════════════
-function handleInput(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  const hasAt = el.value.includes('@');
-  document.getElementById('tag-bar').classList.toggle('visible', hasAt);
-}
+    /* ── APP SHELL / CHAT STYLES ── */
+    :root {
+      --bg: #0C0C0F;
+      --surface: #13131A;
+      --surface2: #1A1A24;
+      --border: #24242F;
+      --border2: #2E2E3D;
+      --text: #EEEEF5;
+      --text2: #8888A8;
+      --text3: #4A4A6A;
+      --accent: #6C63FF;
+      --accent2: #8B85FF;
+      --accent-glow: rgba(108,99,255,0.15);
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
+      --claude: #E8703A;
+      --claude-bg: rgba(232,112,58,0.08);
+      --claude-border: rgba(232,112,58,0.2);
 
-function insertTag(name) {
-  const inp = document.getElementById('chat-input');
-  inp.value = inp.value.replace(/@\w*$/, '') + `@${name} `;
-  inp.focus();
-  document.getElementById('tag-bar').classList.remove('visible');
-}
+      --gpt: #19C37D;
+      --gpt-bg: rgba(25,195,125,0.08);
+      --gpt-border: rgba(25,195,125,0.2);
 
-function detectTag(text) {
-  const lower = text.toLowerCase().trim();
-  for (const [tag, agent] of Object.entries(TAG_MAP)) {
-    if ((lower.startsWith(tag) || lower.includes(' ' + tag)) && APP.keys[agent]) return agent;
-  }
-  return null;
-}
+      --grok: #9B7FFF;
+      --grok-bg: rgba(155,127,255,0.08);
+      --grok-border: rgba(155,127,255,0.2);
 
-// ══════════════════════════════════════════════════════
-// SEND MESSAGE
-// ══════════════════════════════════════════════════════
-async function sendMessage() {
-  const inp = document.getElementById('chat-input');
-  const text = inp.value.trim();
-  if (!text || APP.streaming) return;
+      --gemini: #4A9EFF;
+      --gemini-bg: rgba(74,158,255,0.08);
+      --gemini-border: rgba(74,158,255,0.2);
 
-  APP.streaming = true;
-  document.getElementById('send-btn').disabled = true;
-  inp.value = ''; inp.style.height = 'auto';
-  document.getElementById('tag-bar').classList.remove('visible');
+      --success: #19C37D;
+      --error: #FF5A5A;
+      --radius: 12px;
+    }
 
-  // Remove welcome
-  const w = document.getElementById('chat-welcome');
-  if (w) w.remove();
+    * { box-sizing: border-box; }
 
-  appendUserBubble(text);
+    html, body {
+      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  // Save user message to DB
-  if (!APP.currentConvId) await startConversation(text);
-  await saveMessage('user', null, text);
+    .hidden { display: none !important; }
 
-  // Which agents respond?
-  const tagged = detectTag(text);
-  let agents;
-  if (tagged) {
-    agents = [tagged];
-    appendSysNote(`→ directed to ${AGENTS[tagged].label} only`);
-  } else {
-    const pref = document.getElementById('default-agent').value;
-    const all = Object.keys(APP.keys).filter(a => APP.active[a]);
-    agents = pref !== 'all' && APP.keys[pref] && APP.active[pref]
-      ? [pref, ...all.filter(a => a !== pref)]
-      : all;
-  }
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: block; }
 
-  if (agents.length === 0) {
-    showToast('No active agents — toggle one on in the header');
-    APP.streaming = false;
-    document.getElementById('send-btn').disabled = false;
-    return;
-  }
+    #page-connect.page.active,
+    #page-chat.page.active,
+    #page-auth.page.active {
+      display: flex;
+    }
 
-  // Add user turn to each agent's history
-  agents.forEach(agent => {
-    if (!APP.history[agent]) APP.history[agent] = [];
-    if (APP.history[agent].length === 0)
-      APP.history[agent].push({ role: 'system', content: AGENTS[agent].system });
-    APP.history[agent].push({ role: 'user', content: text });
-  });
+    /* ════════════════════════════════════
+       AUTH REDESIGN
+    ════════════════════════════════════ */
+    #page-auth {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(232,112,58,0.08), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255,180,165,0.06), transparent 30%),
+        #131313;
+    }
 
-  // Staggered fire: 2.5s between each
-  const promises = agents.map((agent, i) => new Promise(resolve => {
-    setTimeout(async () => {
-      createTyping(agent);
-      await streamAgent(agent);
-      resolve();
-    }, i * 2500);
-  }));
+    .auth-shell {
+      min-height: 100vh;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+    }
 
-  await Promise.allSettled(promises);
-  APP.streaming = false;
-  document.getElementById('send-btn').disabled = false;
-  document.getElementById('chat-input').focus();
-}
+    .auth-brand-panel {
+      padding: 40px 44px;
+      border-right: 1px solid rgba(91, 64, 59, 0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.01), rgba(255,255,255,0)),
+        #131313;
+    }
 
-// ══════════════════════════════════════════════════════
-// STREAM
-// ══════════════════════════════════════════════════════
-async function streamAgent(agent) {
-  const cfg = AGENTS[agent];
-  const key = APP.keys[agent];
-  const t0 = Date.now();
+    .auth-brand-top {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-  try {
-    const endpoint = typeof cfg.endpoint === 'function' ? cfg.endpoint(key) : cfg.endpoint;
-    const resp = await fetch(endpoint, {
-      method: 'POST',
-      headers: cfg.headers(key),
-      body: JSON.stringify(cfg.buildBody(APP.history[agent].slice(), cfg.model))
-    });
+    .auth-wordmark {
+      font-family: 'Epilogue', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #E8472A;
+      text-transform: uppercase;
+    }
 
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    .auth-kicker {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #ab8982;
+    }
 
-    removeTyping(agent);
-    const bubble = createStreamRow(agent);
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let full = '', buf = '';
+    .auth-brand-main {
+      max-width: 720px;
+    }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop();
-      for (const line of lines) {
-        const token = cfg.parseChunk(line.trim());
-        if (token) {
-          full += token;
-          bubble.innerHTML = esc(full) + `<span class="stream-cursor"></span>`;
-          scrollBottom();
-        }
+    .auth-hero-title {
+      font-family: 'Epilogue', sans-serif;
+      font-size: clamp(48px, 6vw, 92px);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      text-transform: uppercase;
+      color: #e5e2e1;
+    }
+
+    .auth-hero-title span {
+      color: #ffb4a5;
+    }
+
+    .auth-hero-sub {
+      margin-top: 22px;
+      max-width: 620px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      line-height: 1.6;
+      color: #e4beb7;
+    }
+
+    .auth-mini-stack {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 760px;
+    }
+
+    .auth-mini-card {
+      background: #1c1b1b;
+      border: 1px solid rgba(91, 64, 59, 0.22);
+      padding: 18px 18px 16px;
+    }
+
+    .auth-mini-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .auth-mini-card p {
+      color: rgba(229,226,225,0.78);
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .auth-brand-footer {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #ab8982;
+    }
+
+    .auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background: #0e0e0e;
+      width: 100%;
+    }
+
+    .auth-panel-inner {
+      width: 100%;
+      max-width: 460px;
+      background: #1c1b1b;
+      border: 1px solid rgba(91, 64, 59, 0.24);
+      padding: 36px;
+      box-shadow: 10px 10px 0px 0px #000;
+    }
+
+    .auth-eyebrow {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #ffb4a5;
+      margin-bottom: 14px;
+    }
+
+    .auth-title-xl,
+    .auth-title-lg {
+      font-family: 'Epilogue', sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      text-transform: uppercase;
+      color: #e5e2e1;
+      margin: 0 0 10px 0;
+    }
+
+    .auth-title-xl {
+      font-size: 42px;
+      line-height: 0.95;
+    }
+
+    .auth-title-lg {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .auth-sub-xl,
+    .auth-sub-lg {
+      font-family: 'Manrope', sans-serif;
+      color: #e4beb7;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .auth-sub-xl {
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+
+    .auth-sub-lg {
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    .auth-actions-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .auth-primary-btn,
+    .auth-secondary-btn,
+    .auth-ghost-btn {
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+    }
+
+    .auth-primary-btn {
+      background: linear-gradient(135deg, #ffb4a5 0%, #fe5738 100%);
+      color: #3e0400;
+      padding: 16px 18px;
+      box-shadow: 4px 4px 0px 0px #000;
+      font-size: 13px;
+      border: none;
+    }
+
+    .auth-primary-btn:hover {
+      transform: translate(-1px, -1px);
+    }
+
+    .auth-primary-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .auth-secondary-btn {
+      background: transparent;
+      color: #e5e2e1;
+      border: 1px solid rgba(91, 64, 59, 0.5);
+      padding: 15px 18px;
+      font-size: 13px;
+    }
+
+    .auth-secondary-btn:hover,
+    .auth-ghost-btn:hover {
+      border-color: #E8472A;
+      color: #fff;
+    }
+
+    .auth-ghost-btn {
+      background: #131313;
+      color: #e5e2e1;
+      border: 1px solid rgba(91, 64, 59, 0.45);
+      padding: 15px 18px;
+      font-size: 13px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .auth-ghost-btn-sm {
+      margin-top: 12px;
+    }
+
+    .auth-google-mark {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(91, 64, 59, 0.5);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      background: #201f1f;
+      color: #ffb4a5;
+    }
+
+    .auth-note {
+      margin-top: 18px;
+      color: #ab8982;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .auth-back {
+      margin-bottom: 16px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #ab8982;
+      cursor: pointer;
+    }
+
+    .auth-back:hover {
+      color: #ffb4a5;
+    }
+
+    .auth-error {
+      background: rgba(255, 90, 90, 0.08);
+      border: 1px solid rgba(255, 90, 90, 0.25);
+      color: #ffb4ab;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .auth-inline-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      color: #ab8982;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .auth-inline-links a {
+      cursor: pointer;
+      color: #ffb4a5;
+      text-decoration: none;
+    }
+
+    .auth-inline-links a:hover {
+      color: #fff;
+    }
+
+    #page-auth .field {
+      margin-bottom: 14px;
+    }
+
+    #page-auth .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #ab8982;
+    }
+
+    #page-auth .field input {
+      width: 100%;
+      background: #131313;
+      color: #e5e2e1;
+      border: 1px solid rgba(91, 64, 59, 0.45);
+      padding: 14px 14px;
+      border-radius: 0;
+      outline: none;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    #page-auth .field input:focus {
+      border-color: #E8472A;
+      background: #171717;
+    }
+
+    #page-auth .field input::placeholder {
+      color: #7e655f;
+    }
+
+    /* ════════════════════════════════════
+       CONNECT PAGE
+    ════════════════════════════════════ */
+    #page-connect {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      min-height: 100vh;
+      background: #0C0C0F;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    #page-connect::before {
+      content: '';
+      position: absolute;
+      width: 800px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(108,99,255,0.07) 0%, transparent 70%);
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .connect-header {
+      text-align: center;
+      margin-bottom: 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .connect-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .connect-logo-mark {
+      width: 42px;
+      height: 42px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .connect-logo-text {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .connect-logo-text span { color: var(--accent2); }
+
+    .connect-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .connect-sub {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .connect-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .agent-card.connected {
+      border-color: var(--success);
+      background: rgba(25,195,125,0.04);
+    }
+
+    .agent-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .agent-card-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .agent-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .agent-card[data-agent="claude"] .agent-dot { background: var(--claude); box-shadow: 0 0 8px var(--claude); }
+    .agent-card[data-agent="gpt"]    .agent-dot { background: var(--gpt); box-shadow: 0 0 8px var(--gpt); }
+    .agent-card[data-agent="grok"]   .agent-dot { background: var(--grok); box-shadow: 0 0 8px var(--grok); }
+    .agent-card[data-agent="gemini"] .agent-dot { background: var(--gemini); box-shadow: 0 0 8px var(--gemini); }
+
+    .agent-card-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .agent-card[data-agent="claude"] .agent-card-name { color: var(--claude); }
+    .agent-card[data-agent="gpt"]    .agent-card-name { color: var(--gpt); }
+    .agent-card[data-agent="grok"]   .agent-card-name { color: var(--grok); }
+    .agent-card[data-agent="gemini"] .agent-card-name { color: var(--gemini); }
+
+    .agent-status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.3px;
+    }
+
+    .agent-status-badge.idle {
+      background: var(--surface2);
+      color: var(--text3);
+    }
+
+    .agent-status-badge.checking {
+      background: rgba(255,200,50,0.1);
+      color: #FFC832;
+    }
+
+    .agent-status-badge.ok {
+      background: rgba(25,195,125,0.12);
+      color: var(--success);
+    }
+
+    .agent-status-badge.fail {
+      background: rgba(255,90,90,0.1);
+      color: var(--error);
+    }
+
+    .agent-provider {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .key-field {
+      display: flex;
+      gap: 8px;
+    }
+
+    .key-field input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1.5px solid var(--border2);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 0;
+    }
+
+    .key-field input:focus { border-color: var(--accent); }
+    .key-field input::placeholder { color: var(--text3); }
+
+    .btn-connect {
+      background: var(--surface2);
+      border: 1.5px solid var(--border2);
+      color: var(--text2);
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .btn-connect:hover { border-color: var(--accent); color: var(--accent2); }
+
+    .agent-card.connected .btn-connect {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .get-key-link {
+      display: block;
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 8px;
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+
+    .get-key-link:hover { color: var(--accent2); }
+
+    .connect-footer {
+      margin-top: 28px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-enter-chat {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 40px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: -0.2px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .btn-enter-chat.ready {
+      opacity: 1;
+      pointer-events: all;
+      box-shadow: 0 8px 32px rgba(108,99,255,0.3);
+    }
+
+    .btn-enter-chat.ready:hover { background: var(--accent2); transform: translateY(-2px); }
+
+    .connect-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .signout-link {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-size: 13px;
+      color: var(--text3);
+      cursor: pointer;
+      transition: color 0.12s;
+      z-index: 10;
+    }
+
+    .signout-link:hover { color: var(--text2); }
+
+    /* ════════════════════════════════════
+       CHAT PAGE
+    ════════════════════════════════════ */
+    #page-chat {
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background: #0C0C0F;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 58px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      cursor: pointer;
+    }
+
+    .chat-logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .chat-logo span { color: var(--accent2); }
+
+    .active-agents {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .active-agent-pip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      user-select: none;
+    }
+
+    .active-agent-pip.off { opacity: 0.25; }
+
+    .active-agent-pip[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
+    .active-agent-pip[data-agent="gpt"]    { background: var(--gpt-bg); color: var(--gpt); border: 1px solid var(--gpt-border); }
+    .active-agent-pip[data-agent="grok"]   { background: var(--grok-bg); color: var(--grok); border: 1px solid var(--grok-border); }
+    .active-agent-pip[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
+
+    .pip-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .chat-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-manage {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .btn-manage:hover { border-color: var(--accent); color: var(--accent2); }
+
+    .btn-signout {
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.12s;
+      padding: 4px;
+    }
+
+    .btn-signout:hover { color: var(--text2); }
+
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 0 8px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-body::-webkit-scrollbar { width: 4px; }
+    .chat-body::-webkit-scrollbar-track { background: transparent; }
+    .chat-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    .chat-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .chat-welcome {
+      text-align: center;
+      padding: 60px 20px 20px;
+      animation: fade-up 0.4s ease;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-welcome-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .chat-welcome h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin: 0 0 8px 0;
+    }
+
+    .chat-welcome p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 380px;
+      margin: 0 auto 20px;
+    }
+
+    .welcome-agents {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .welcome-agent-tag {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .welcome-agent-tag.claude { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
+    .welcome-agent-tag.gpt    { background: var(--gpt-bg); color: var(--gpt); border: 1px solid var(--gpt-border); }
+    .welcome-agent-tag.grok   { background: var(--grok-bg); color: var(--grok); border: 1px solid var(--grok-border); }
+    .welcome-agent-tag.gemini { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      animation: msg-in 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+
+    @keyframes msg-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-row.user { align-items: flex-end; margin-top: 10px; }
+    .msg-row.ai   { align-items: flex-start; margin-top: 6px; }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+      padding: 0 2px;
+    }
+
+    .agent-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .agent-avatar[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-border); }
+    .agent-avatar[data-agent="gpt"]    { background: var(--gpt-bg); color: var(--gpt); border: 1px solid var(--gpt-border); }
+    .agent-avatar[data-agent="grok"]   { background: var(--grok-bg); color: var(--grok); border: 1px solid var(--grok-border); }
+    .agent-avatar[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border: 1px solid var(--gemini-border); }
+
+    .msg-sender {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .msg-row[data-agent="claude"] .msg-sender { color: var(--claude); }
+    .msg-row[data-agent="gpt"]    .msg-sender { color: var(--gpt); }
+    .msg-row[data-agent="grok"]   .msg-sender { color: var(--grok); }
+    .msg-row[data-agent="gemini"] .msg-sender { color: var(--gemini); }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .bubble {
+      max-width: 75%;
+      padding: 11px 15px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.65;
+      word-break: break-word;
+    }
+
+    .msg-row.user .bubble {
+      background: var(--accent);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.ai .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-bottom-left-radius: 4px;
+      color: var(--text);
+    }
+
+    .msg-row[data-agent="claude"] .bubble { border-left: 2px solid var(--claude); }
+    .msg-row[data-agent="gpt"]    .bubble { border-left: 2px solid var(--gpt); }
+    .msg-row[data-agent="grok"]   .bubble { border-left: 2px solid var(--grok); }
+    .msg-row[data-agent="gemini"] .bubble { border-left: 2px solid var(--gemini); }
+
+    .typing-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      animation: msg-in 0.2s ease;
+    }
+
+    .typing-bubble {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 11px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing-row[data-agent="claude"] .typing-bubble { border-left: 2px solid var(--claude); }
+    .typing-row[data-agent="gpt"]    .typing-bubble { border-left: 2px solid var(--gpt); }
+    .typing-row[data-agent="grok"]   .typing-bubble { border-left: 2px solid var(--grok); }
+    .typing-row[data-agent="gemini"] .typing-bubble { border-left: 2px solid var(--gemini); }
+
+    .t-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: t-bounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-row[data-agent="claude"] .t-dot { background: var(--claude); }
+    .typing-row[data-agent="gpt"]    .t-dot { background: var(--gpt); }
+    .typing-row[data-agent="grok"]   .t-dot { background: var(--grok); }
+    .typing-row[data-agent="gemini"] .t-dot { background: var(--gemini); }
+
+    .t-dot:nth-child(2) { animation-delay: 0.18s; }
+    .t-dot:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes t-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .stream-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      border-radius: 1px;
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: cur-blink 0.7s infinite;
+    }
+
+    .msg-row[data-agent="claude"] .stream-cursor { background: var(--claude); }
+    .msg-row[data-agent="gpt"]    .stream-cursor { background: var(--gpt); }
+    .msg-row[data-agent="grok"]   .stream-cursor { background: var(--grok); }
+    .msg-row[data-agent="gemini"] .stream-cursor { background: var(--gemini); }
+
+    @keyframes cur-blink {
+      0%,49%{opacity:1} 50%,100%{opacity:0}
+    }
+
+    .sys-note {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text3);
+      padding: 4px 0;
+      font-style: italic;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .chat-input-area {
+      padding: 12px 20px 18px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-input-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .tag-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      min-height: 0;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.2s ease;
+    }
+
+    .tag-bar.visible {
+      max-height: 40px;
+    }
+
+    .tag-chip {
+      padding: 4px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.12s;
+    }
+
+    .tag-chip[data-agent="claude"] { background: var(--claude-bg); color: var(--claude); border-color: var(--claude-border); }
+    .tag-chip[data-agent="gpt"]    { background: var(--gpt-bg); color: var(--gpt); border-color: var(--gpt-border); }
+    .tag-chip[data-agent="grok"]   { background: var(--grok-bg); color: var(--grok); border-color: var(--grok-border); }
+    .tag-chip[data-agent="gemini"] { background: var(--gemini-bg); color: var(--gemini); border-color: var(--gemini-border); }
+    .tag-chip:hover { filter: brightness(1.2); }
+
+    .input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border2);
+      border-radius: 14px;
+      padding: 10px 10px 10px 16px;
+      transition: border-color 0.15s;
+    }
+
+    .input-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea#chat-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 22px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    textarea#chat-input::placeholder { color: var(--text3); }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .send-btn:hover { background: var(--accent2); transform: scale(1.05); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { background: var(--border2); cursor: not-allowed; transform: none; }
+
+    .send-btn svg { width: 15px; height: 15px; fill: white; }
+
+    .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding: 0 2px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-hint kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10px;
+    }
+
+    .default-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .default-wrap select {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      font-size: 11px;
+      font-family: 'Outfit', sans-serif;
+      padding: 3px 8px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s;
+      z-index: 999;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .auth-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-brand-panel {
+        display: none;
+      }
+
+      .auth-panel {
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .auth-panel-inner {
+        max-width: 520px;
+        padding: 28px;
+      }
+
+      .auth-title-xl {
+        font-size: 34px;
       }
     }
 
-    bubble.innerHTML = esc(full);
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    finalizeRow(agent, elapsed);
-    APP.history[agent].push({ role: 'assistant', content: full });
-    await saveMessage('assistant', agent, full);
-    scrollBottom();
+    @media (max-width: 600px) {
+      .connect-grid { grid-template-columns: 1fr; }
+      .chat-header {
+        height: auto;
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
 
-  } catch (err) {
-    removeTyping(agent);
-    appendErrBubble(agent, err.message);
-  }
-}
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container transition-colors duration-300">
 
-// ══════════════════════════════════════════════════════
-// DOM HELPERS
-// ══════════════════════════════════════════════════════
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
-function scrollBottom() { const b = document.getElementById('chat-body'); b.scrollTop = b.scrollHeight; }
+  <!-- ══ HOME PAGE ══ -->
+  <div id="page-home" class="page active">
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-[#131313] border-b border-[#5b403b]/20">
+      <div class="text-2xl font-black tracking-tighter text-[#E8472A] uppercase font-headline">OPENSQUAD</div>
 
-function appendUserBubble(text) {
-  const ci = document.getElementById('chat-inner');
-  const d = document.createElement('div');
-  d.className = 'msg-row user';
-  d.innerHTML = `<div class="bubble">${esc(text)}</div><div class="msg-time" style="margin-top:4px;padding:0 2px;">${fmtTime(Date.now())}</div>`;
-  ci.appendChild(d); scrollBottom();
-}
+      <div class="hidden md:flex gap-8 items-center">
+        <a class="font-['Epilogue'] tracking-tighter uppercase font-bold text-sm text-[#E8472A] border-b border-[#E8472A] transition-transform hover:-translate-y-0.5" href="#how-it-works">How it works</a>
+        <a class="font-['Epilogue'] tracking-tighter uppercase font-bold text-sm text-gray-400 hover:text-white transition-colors" href="#squad">Squad</a>
+        <a class="font-['Epilogue'] tracking-tighter uppercase font-bold text-sm text-gray-400 hover:text-white transition-colors" href="#proof">Community</a>
+      </div>
 
-function appendSysNote(txt) {
-  const ci = document.getElementById('chat-inner');
-  const d = document.createElement('div');
-  d.className = 'sys-note'; d.textContent = txt;
-  ci.appendChild(d); scrollBottom();
-}
+      <button onclick="toggleDark()" id="theme-toggle"
+        class="flex items-center gap-2 border border-[#5b403b]/40 px-4 py-2 font-label text-xs uppercase tracking-widest text-gray-400 hover:text-white hover:border-[#E8472A] transition-all">
+        <span class="material-symbols-outlined text-base" id="theme-icon">light_mode</span>
+        <span id="theme-label">Light</span>
+      </button>
+    </nav>
 
-function createTyping(agent) {
-  const ci = document.getElementById('chat-inner');
-  const cfg = AGENTS[agent];
-  const d = document.createElement('div');
-  d.className = 'typing-row'; d.dataset.agent = agent; d.id = `typing-${agent}`;
-  d.innerHTML = `<div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div><div class="typing-bubble"><span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span></div>`;
-  ci.appendChild(d); scrollBottom();
-}
+    <!-- HERO -->
+    <section class="pt-32 pb-20 px-6 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <div class="space-y-8">
+        <h1 class="font-headline text-6xl md:text-8xl font-black tracking-tighter leading-none uppercase">
+          Your entire <span class="text-primary-container">AI squad.</span><br/>One conversation.
+        </h1>
+        <p class="text-xl md:text-2xl font-medium text-on-surface-variant max-w-xl leading-relaxed">
+          Claude, GPT, Grok, and Gemini — all replying to the same message, at the same time.
+        </p>
+        <div class="flex items-center gap-4 flex-wrap">
+          <a href="#auth" onclick="showPage('auth'); switchAuth('auth-home'); return false;" class="lobster-gradient text-[#3e0400] px-10 py-5 font-label font-bold uppercase tracking-widest text-lg transition-all hover:-translate-y-1 hover:-translate-x-1 shadow-[4px_4px_0px_0px_#000]">
+            Get Started →
+          </a>
+        </div>
+      </div>
 
-function removeTyping(agent) {
-  const el = document.getElementById(`typing-${agent}`);
-  if (el) el.remove();
-}
+      <!-- Chat Mockup -->
+      <div class="bg-surface-container-lowest p-1 ghost-border">
+        <div class="bg-surface-container p-4 space-y-4 font-label text-sm">
+          <div class="flex justify-end">
+            <div class="bg-surface-container-high p-3 max-w-[80%] ghost-border text-on-surface">
+              "Draft a product launch strategy for a decentralized compute protocol."
+            </div>
+          </div>
+          <div class="agent-claude bg-surface-container-lowest p-4 space-y-2">
+            <div class="flex items-center gap-2 text-[#E8703A] font-bold uppercase text-[10px] tracking-widest">
+              <span class="material-symbols-outlined text-sm">psychology</span> CLAUDE OPUS 4.6
+            </div>
+            <p class="text-on-surface/80 leading-snug">The strategy must prioritize technical legitimacy over marketing hype. Start with an incentivized testnet focused on node diversity...</p>
+          </div>
+          <div class="agent-gpt bg-surface-container-lowest p-4 space-y-2">
+            <div class="flex items-center gap-2 text-[#19C37D] font-bold uppercase text-[10px] tracking-widest">
+              <span class="material-symbols-outlined text-sm">settings_suggest</span> GPT-4o
+            </div>
+            <p class="text-on-surface/80 leading-snug">1. Core Value Prop: Cost efficiency. 2. Phases: Developer Beta, Ecosystem Fund, Public Launch. 3. Target: AI Labs...</p>
+          </div>
+          <div class="agent-grok bg-surface-container-lowest p-4 space-y-2">
+            <div class="flex items-center gap-2 text-[#9B7FFF] font-bold uppercase text-[10px] tracking-widest">
+              <span class="material-symbols-outlined text-sm">bolt</span> GROK 3
+            </div>
+            <p class="text-on-surface/80 leading-snug">Most protocols fail because they're boring. Roast the centralized giants. Make it raw. Make it permissionless. Make it fast.</p>
+          </div>
+          <div class="agent-gemini bg-surface-container-lowest p-4 space-y-2">
+            <div class="flex items-center gap-2 text-[#4A9EFF] font-bold uppercase text-[10px] tracking-widest">
+              <span class="material-symbols-outlined text-sm">analytics</span> GEMINI 2.0 FLASH
+            </div>
+            <p class="text-on-surface/80 leading-snug">Decentralized compute is a large market. Position against incumbents with benchmark-backed cost and speed comparisons.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-function createStreamRow(agent) {
-  removeTyping(agent);
-  const ci = document.getElementById('chat-inner');
-  const cfg = AGENTS[agent];
-  const row = document.createElement('div');
-  row.className = 'msg-row ai'; row.dataset.agent = agent; row.id = `stream-row-${agent}`;
-  row.innerHTML = `
-    <div class="msg-meta">
-      <div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div>
-      <span class="msg-sender">${cfg.label}</span>
-      <span class="msg-time" id="stream-time-${agent}">${fmtTime(Date.now())}</span>
+    <!-- THE PROBLEM -->
+    <section class="bg-surface-container-lowest py-24 px-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="max-w-3xl mb-16">
+          <h2 class="font-headline text-4xl md:text-5xl font-black uppercase tracking-tighter leading-tight mb-8">
+            You're paying for ChatGPT. And Claude. And Grok. Tab switching. <span class="text-outline">Context lost.</span> Same question, asked four times.
+          </h2>
+          <div class="h-1 w-24 bg-primary-container"></div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-px bg-outline-variant/20 ghost-border">
+          <div class="bg-surface p-10 space-y-6">
+            <span class="material-symbols-outlined text-primary-container text-4xl">tab_unselected</span>
+            <h3 class="font-label text-xl font-bold uppercase tracking-tight">Tab Fatigue</h3>
+            <p class="text-on-surface-variant font-body leading-relaxed">Stop jumping between browser windows. Get every model's take in one thread, side by side.</p>
+          </div>
+          <div class="bg-surface p-10 space-y-6">
+            <span class="material-symbols-outlined text-primary-container text-4xl">payments</span>
+            <h3 class="font-label text-xl font-bold uppercase tracking-tight">Subscription Hell</h3>
+            <p class="text-on-surface-variant font-body leading-relaxed">Cancel four separate $20/mo accounts. Use your own API keys — pay only for what you consume.</p>
+          </div>
+          <div class="bg-surface p-10 space-y-6">
+            <span class="material-symbols-outlined text-primary-container text-4xl">restore</span>
+            <h3 class="font-label text-xl font-bold uppercase tracking-tight">Broken Context</h3>
+            <p class="text-on-surface-variant font-body leading-relaxed">Every model shares the same conversation memory. No more copy-pasting context between agents.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works" class="py-24 px-6 max-w-7xl mx-auto">
+      <h2 class="font-label text-sm font-bold uppercase tracking-[0.3em] text-primary-container mb-12">Deployment Protocol</h2>
+      <div class="grid md:grid-cols-3 gap-12">
+        <div class="space-y-6">
+          <div class="text-6xl font-headline font-black text-surface-container-high">01</div>
+          <h3 class="font-label text-2xl font-bold uppercase">Create Account</h3>
+          <p class="text-on-surface-variant">Create an OpenSquad account using email/password or Google.</p>
+        </div>
+        <div class="space-y-6">
+          <div class="text-6xl font-headline font-black text-surface-container-high">02</div>
+          <h3 class="font-label text-2xl font-bold uppercase">Connect API Keys</h3>
+          <p class="text-on-surface-variant">Input your Anthropic, OpenAI, xAI, and Google keys. Encrypted and saved to your account.</p>
+        </div>
+        <div class="space-y-6">
+          <div class="text-6xl font-headline font-black text-surface-container-high">03</div>
+          <h3 class="font-label text-2xl font-bold uppercase">Ask Anything</h3>
+          <p class="text-on-surface-variant">Write one prompt. Use @tags to address a specific agent, or hit enter to summon the whole squad.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENT PERSONALITIES -->
+    <section id="squad" class="bg-surface-container-lowest py-24 px-6">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="font-label text-sm font-bold uppercase tracking-[0.3em] text-primary-container mb-12">Your Squad</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-surface-container p-8 space-y-4 ghost-border border-t-4 border-t-[#E8703A]">
+            <div class="h-12 w-12 bg-[#E8703A]/10 flex items-center justify-center text-[#E8703A]">
+              <span class="material-symbols-outlined">auto_awesome</span>
+            </div>
+            <h4 class="font-label font-bold text-xl uppercase tracking-tighter">Claude</h4>
+            <p class="text-xs text-on-surface-variant font-body leading-relaxed italic">"Thoughtful. Precise. Pushes back when you're wrong."</p>
+            <p class="text-[10px] text-outline uppercase tracking-widest font-label">Opus 4.6</p>
+          </div>
+          <div class="bg-surface-container p-8 space-y-4 ghost-border border-t-4 border-t-[#19C37D]">
+            <div class="h-12 w-12 bg-[#19C37D]/10 flex items-center justify-center text-[#19C37D]">
+              <span class="material-symbols-outlined">architecture</span>
+            </div>
+            <h4 class="font-label font-bold text-xl uppercase tracking-tighter">GPT</h4>
+            <p class="text-xs text-on-surface-variant font-body leading-relaxed italic">"Structured. Reliable. Gets to the point."</p>
+            <p class="text-[10px] text-outline uppercase tracking-widest font-label">GPT-4o</p>
+          </div>
+          <div class="bg-surface-container p-8 space-y-4 ghost-border border-t-4 border-t-[#9B7FFF]">
+            <div class="h-12 w-12 bg-[#9B7FFF]/10 flex items-center justify-center text-[#9B7FFF]">
+              <span class="material-symbols-outlined">terminal</span>
+            </div>
+            <h4 class="font-label font-bold text-xl uppercase tracking-tighter">Grok</h4>
+            <p class="text-xs text-on-surface-variant font-body leading-relaxed italic">"Sharp. Sarcastic. Says what others won't."</p>
+            <p class="text-[10px] text-outline uppercase tracking-widest font-label">Grok 3</p>
+          </div>
+          <div class="bg-surface-container p-8 space-y-4 ghost-border border-t-4 border-t-[#4A9EFF]">
+            <div class="h-12 w-12 bg-[#4A9EFF]/10 flex items-center justify-center text-[#4A9EFF]">
+              <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <h4 class="font-label font-bold text-xl uppercase tracking-tighter">Gemini</h4>
+            <p class="text-xs text-on-surface-variant font-body leading-relaxed italic">"Data-first. Evidence-backed. Always has a number."</p>
+            <p class="text-[10px] text-outline uppercase tracking-widest font-label">Gemini 2.0 Flash</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="w-full overflow-hidden bg-primary-container py-4">
+      <div class="animate-marquee font-label font-bold uppercase tracking-widest text-[#3e0400] text-sm">
+        <span class="mx-4">One thread</span><span class="mx-2">•</span>
+        <span class="mx-4">Full memory</span><span class="mx-2">•</span>
+        <span class="mx-4">@tag any agent</span><span class="mx-2">•</span>
+        <span class="mx-4">Your API keys</span><span class="mx-2">•</span>
+        <span class="mx-4">No extra subscriptions</span><span class="mx-2">•</span>
+        <span class="mx-4">2.5s staggered replies</span><span class="mx-2">•</span>
+        <span class="mx-4">Claude · GPT-4o · Grok · Gemini</span><span class="mx-2">•</span>
+        <span class="mx-4">One thread</span><span class="mx-2">•</span>
+        <span class="mx-4">Full memory</span><span class="mx-2">•</span>
+        <span class="mx-4">@tag any agent</span><span class="mx-2">•</span>
+        <span class="mx-4">Your API keys</span><span class="mx-2">•</span>
+        <span class="mx-4">No extra subscriptions</span><span class="mx-2">•</span>
+        <span class="mx-4">2.5s staggered replies</span><span class="mx-2">•</span>
+        <span class="mx-4">Claude · GPT-4o · Grok · Gemini</span><span class="mx-2">•</span>
+      </div>
     </div>
-    <div class="bubble" id="stream-bubble-${agent}"><span class="stream-cursor"></span></div>`;
-  ci.appendChild(row); scrollBottom();
-  return document.getElementById(`stream-bubble-${agent}`);
-}
 
-function finalizeRow(agent, elapsed) {
-  const t = document.getElementById(`stream-time-${agent}`);
-  if (t) t.textContent += ` · ${elapsed}s`;
-  const r = document.getElementById(`stream-row-${agent}`);
-  if (r) r.removeAttribute('id');
-}
+    <!-- SOCIAL PROOF -->
+    <section id="proof" class="py-24 px-6 max-w-7xl mx-auto">
+      <h2 class="font-headline text-3xl font-black uppercase mb-12 tracking-tighter">Squad Members</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-surface-container-high p-8 ghost-border space-y-4">
+          <div class="flex gap-1 text-primary-container">
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+          </div>
+          <p class="font-body text-on-surface italic">"I use Claude for the logic and Grok to roast my assumptions. Having them debate in one thread is like having a board of advisors for $0.05 a prompt."</p>
+          <div class="flex items-center gap-3 pt-4">
+            <div class="w-10 h-10 bg-surface-container-lowest ghost-border flex items-center justify-center text-primary-container font-headline font-black text-lg">M</div>
+            <div>
+              <div class="font-label font-bold text-xs uppercase">@dev_ops_max</div>
+              <div class="text-[10px] text-on-surface-variant uppercase tracking-widest">Lead Engineer</div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-surface-container-high p-8 ghost-border space-y-4">
+          <div class="flex gap-1 text-primary-container">
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+          </div>
+          <p class="font-body text-on-surface italic">"The speed of comparison is unmatched. OpenSquad literally saved me 4 hours of tab-switching today alone."</p>
+          <div class="flex items-center gap-3 pt-4">
+            <div class="w-10 h-10 bg-surface-container-lowest ghost-border flex items-center justify-center text-[#19C37D] font-headline font-black text-lg">S</div>
+            <div>
+              <div class="font-label font-bold text-xs uppercase">@sarah_builds</div>
+              <div class="text-[10px] text-on-surface-variant uppercase tracking-widest">Product Designer</div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-surface-container-high p-8 ghost-border space-y-4">
+          <div class="flex gap-1 text-primary-container">
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">star</span>
+          </div>
+          <p class="font-body text-on-surface italic">"Finally, a tool that respects my workflow. No bloated UI, just the raw power of the best LLMs in a single stream."</p>
+          <div class="flex items-center gap-3 pt-4">
+            <div class="w-10 h-10 bg-surface-container-lowest ghost-border flex items-center justify-center text-[#9B7FFF] font-headline font-black text-lg">A</div>
+            <div>
+              <div class="font-label font-bold text-xs uppercase">@arthur_creative</div>
+              <div class="text-[10px] text-on-surface-variant uppercase tracking-widest">Content Strategist</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-function appendErrBubble(agent, msg) {
-  const ci = document.getElementById('chat-inner');
-  const cfg = AGENTS[agent];
-  const row = document.createElement('div');
-  row.className = 'msg-row ai'; row.dataset.agent = agent;
-  row.innerHTML = `
-    <div class="msg-meta">
-      <div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div>
-      <span class="msg-sender">${cfg.label}</span>
+    <!-- FOOTER -->
+    <footer class="w-full py-12 px-6 flex flex-col md:flex-row justify-between items-center gap-8 bg-[#0e0e0e] border-t border-[#5b403b]/20">
+      <div class="text-lg font-black text-[#E8472A] font-headline tracking-tighter">OPENSQUAD</div>
+      <div class="flex gap-8">
+        <a class="font-['Space_Grotesk'] uppercase text-[12px] tracking-widest text-gray-500 hover:text-[#ffb4a5] transition-colors" href="#">Privacy Policy</a>
+        <a class="font-['Space_Grotesk'] uppercase text-[12px] tracking-widest text-gray-500 hover:text-[#ffb4a5] transition-colors" href="#">Terms of Service</a>
+        <a class="font-['Space_Grotesk'] uppercase text-[12px] tracking-widest text-gray-500 hover:text-[#ffb4a5] transition-colors" href="#">Twitter</a>
+      </div>
+      <div class="font-['Space_Grotesk'] uppercase text-[12px] tracking-widest text-gray-500">© 2026 OPENSQUAD. NO RADIUS. NO MERCY.</div>
+    </footer>
+  </div>
+
+  <!-- ══ AUTH PAGE ══ -->
+  <div id="page-auth" class="page">
+    <div class="auth-shell">
+      <!-- LEFT -->
+      <div class="auth-brand-panel">
+        <div class="auth-brand-top">
+          <div class="auth-wordmark">OPENSQUAD</div>
+          <div class="auth-kicker">YOUR AI SQUAD. ONE CONVERSATION.</div>
+        </div>
+
+        <div class="auth-brand-main">
+          <h1 class="auth-hero-title">
+            CLAUDE. GPT. GROK. GEMINI.
+            <span>ONE THREAD.</span>
+          </h1>
+          <p class="auth-hero-sub">
+            Stop tab switching. Bring your entire AI stack into one shared-memory conversation.
+          </p>
+
+          <div class="auth-mini-stack">
+            <div class="auth-mini-card agent-claude">
+              <div class="auth-mini-label">CLAUDE</div>
+              <p>Thoughtful. Precise. Pushes back.</p>
+            </div>
+            <div class="auth-mini-card agent-gpt">
+              <div class="auth-mini-label">GPT</div>
+              <p>Structured. Reliable. To the point.</p>
+            </div>
+            <div class="auth-mini-card agent-grok">
+              <div class="auth-mini-label">GROK</div>
+              <p>Sharp. Unfiltered. Useful friction.</p>
+            </div>
+            <div class="auth-mini-card agent-gemini">
+              <div class="auth-mini-label">GEMINI</div>
+              <p>Data-first. Evidence-backed. Quantified.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-brand-footer">
+          <span>ONE THREAD</span>
+          <span>•</span>
+          <span>FULL MEMORY</span>
+          <span>•</span>
+          <span>YOUR API KEYS</span>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="auth-panel">
+        <div class="auth-panel-inner">
+          <div id="auth-error" class="auth-error"></div>
+
+          <!-- AUTH LANDING -->
+          <div id="view-auth-home">
+            <div class="auth-eyebrow">ACCESS NODE</div>
+            <div class="auth-title-xl">Enter OpenSquad</div>
+            <div class="auth-sub-xl">
+              Sign in to your account or create a new one to connect your agents.
+            </div>
+
+            <div class="auth-actions-stack">
+              <button class="auth-primary-btn" onclick="switchAuth('login')">Log In</button>
+              <button class="auth-secondary-btn" onclick="switchAuth('signup')">Create Account</button>
+              <button class="auth-ghost-btn" onclick="doGoogleLogin()">
+                <span class="auth-google-mark">G</span>
+                Continue with Google
+              </button>
+            </div>
+
+            <div class="auth-note">
+              By continuing, you enter a shared-memory multi-model workspace.
+            </div>
+          </div>
+
+          <!-- LOGIN -->
+          <div id="view-login" class="hidden">
+            <div class="auth-back" onclick="switchAuth('auth-home')">← Back</div>
+            <div class="auth-eyebrow">LOGIN</div>
+            <div class="auth-title-lg">Welcome back</div>
+            <div class="auth-sub-lg">Resume your conversation with the squad.</div>
+
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="login-email" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="login-password" placeholder="••••••••" />
+            </div>
+
+            <button class="auth-primary-btn" onclick="doLogin()">Log In</button>
+
+            <button class="auth-ghost-btn auth-ghost-btn-sm" onclick="doGoogleLogin()">
+              <span class="auth-google-mark">G</span>
+              Log in with Google
+            </button>
+
+            <div class="auth-inline-links">
+              <a onclick="switchAuth('forgot')">Forgot password?</a>
+              <span>•</span>
+              <a onclick="switchAuth('signup')">Create account</a>
+            </div>
+          </div>
+
+          <!-- SIGNUP -->
+          <div id="view-signup" class="hidden">
+            <div class="auth-back" onclick="switchAuth('auth-home')">← Back</div>
+            <div class="auth-eyebrow">CREATE ACCOUNT</div>
+            <div class="auth-title-lg">Build your squad</div>
+            <div class="auth-sub-lg">Create an account and connect your models in minutes.</div>
+
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="signup-email" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="signup-password" placeholder="Minimum 6 characters" />
+            </div>
+
+            <button class="auth-primary-btn" onclick="doSignup()">Create Account</button>
+
+            <button class="auth-ghost-btn auth-ghost-btn-sm" onclick="doGoogleLogin()">
+              <span class="auth-google-mark">G</span>
+              Sign up with Google
+            </button>
+
+            <div class="auth-inline-links">
+              <a onclick="switchAuth('login')">Already have an account? Log in</a>
+            </div>
+          </div>
+
+          <!-- FORGOT PASSWORD -->
+          <div id="view-forgot" class="hidden">
+            <div class="auth-back" onclick="switchAuth('login')">← Back</div>
+            <div class="auth-eyebrow">RECOVERY</div>
+            <div class="auth-title-lg">Reset password</div>
+            <div class="auth-sub-lg">We’ll send a recovery link to your email.</div>
+
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="forgot-email" placeholder="you@example.com" />
+            </div>
+
+            <button class="auth-primary-btn" onclick="doResetPassword()">Send Reset Link</button>
+
+            <div class="auth-inline-links">
+              <a onclick="switchAuth('login')">Back to login</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="bubble" style="color:var(--text3);font-size:13px;font-style:italic;">⚠ ${esc(msg)}</div>`;
-  document.getElementById('chat-inner').appendChild(row); scrollBottom();
-}
+  </div>
 
-function fmtTime(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+  <!-- ══ CONNECT PAGE ══ -->
+  <div id="page-connect" class="page">
+    <span class="signout-link" onclick="doSignout()">Sign out</span>
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+    <div class="connect-header">
+      <div class="connect-logo">
+        <div class="connect-logo-mark">⚡</div>
+        <div class="connect-logo-text">Open<span>Squad</span></div>
+      </div>
+      <div class="connect-title">Connect your agents</div>
+      <div class="connect-sub">Paste your API keys below. Connect at least one agent to start chatting.</div>
+    </div>
 
-// ══════════════════════════════════════════════════════
-// DATABASE — CONVERSATIONS & MESSAGES
-// ══════════════════════════════════════════════════════
-async function startConversation(firstMsg) {
-  const title = firstMsg.slice(0, 60);
-  const { data } = await sb.from('conversations').insert({
-    user_id: APP.user.id,
-    title
-  }).select().single();
-  if (data) APP.currentConvId = data.id;
-}
+    <div class="connect-grid">
+      <div class="agent-card" data-agent="claude">
+        <div class="agent-card-header">
+          <div class="agent-card-left">
+            <div class="agent-dot"></div>
+            <div class="agent-card-name">Claude</div>
+          </div>
+          <div class="agent-status-badge idle" id="badge-claude">NOT CONNECTED</div>
+        </div>
+        <div class="agent-provider">Anthropic · claude-opus-4-6</div>
+        <div class="key-field">
+          <input type="password" id="input-claude" placeholder="sk-ant-..." />
+          <button class="btn-connect" onclick="connectAgent('claude')">Connect</button>
+        </div>
+        <a class="get-key-link" href="https://console.anthropic.com" target="_blank">↗ Get API key at console.anthropic.com</a>
+      </div>
 
-async function saveMessage(role, agent, content) {
-  if (!APP.currentConvId || !APP.user) return;
-  await sb.from('messages').insert({
-    conversation_id: APP.currentConvId,
-    user_id: APP.user.id,
-    role,
-    agent,
-    content
-  });
-}
+      <div class="agent-card" data-agent="gpt">
+        <div class="agent-card-header">
+          <div class="agent-card-left">
+            <div class="agent-dot"></div>
+            <div class="agent-card-name">GPT-4o</div>
+          </div>
+          <div class="agent-status-badge idle" id="badge-gpt">NOT CONNECTED</div>
+        </div>
+        <div class="agent-provider">OpenAI · gpt-4o</div>
+        <div class="key-field">
+          <input type="password" id="input-gpt" placeholder="sk-..." />
+          <button class="btn-connect" onclick="connectAgent('gpt')">Connect</button>
+        </div>
+        <a class="get-key-link" href="https://platform.openai.com/api-keys" target="_blank">↗ Get API key at platform.openai.com</a>
+      </div>
 
-// ══════════════════════════════════════════════════════
-// INIT — check if already logged in
-// ══════════════════════════════════════════════════════
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    APP.user = session.user;
-    await loadUserKeys();
-    showPage('connect');
-  }
-})();
-</script>
+      <div class="agent-card" data-agent="grok">
+        <div class="agent-card-header">
+          <div class="agent-card-left">
+            <div class="agent-dot"></div>
+            <div class="agent-card-name">Grok</div>
+          </div>
+          <div class="agent-status-badge idle" id="badge-grok">NOT CONNECTED</div>
+        </div>
+        <div class="agent-provider">xAI · grok-3-latest</div>
+        <div class="key-field">
+          <input type="password" id="input-grok" placeholder="xai-..." />
+          <button class="btn-connect" onclick="connectAgent('grok')">Connect</button>
+        </div>
+        <a class="get-key-link" href="https://console.x.ai" target="_blank">↗ Get API key at console.x.ai</a>
+      </div>
+
+      <div class="agent-card" data-agent="gemini">
+        <div class="agent-card-header">
+          <div class="agent-card-left">
+            <div class="agent-dot"></div>
+            <div class="agent-card-name">Gemini</div>
+          </div>
+          <div class="agent-status-badge idle" id="badge-gemini">NOT CONNECTED</div>
+        </div>
+        <div class="agent-provider">Google · gemini-2.0-flash</div>
+        <div class="key-field">
+          <input type="password" id="input-gemini" placeholder="AIza..." />
+          <button class="btn-connect" onclick="connectAgent('gemini')">Connect</button>
+        </div>
+        <a class="get-key-link" href="https://aistudio.google.com/apikey" target="_blank">↗ Get API key at aistudio.google.com</a>
+      </div>
+    </div>
+
+    <div class="connect-footer">
+      <button class="btn-enter-chat" id="btn-enter-chat" onclick="enterChat()">Enter Chat →</button>
+      <div class="connect-note">Keys are encrypted and saved to your account</div>
+    </div>
+  </div>
+
+  <!-- ══ CHAT PAGE ══ -->
+  <div id="page-chat" class="page">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-logo" onclick="goToConnect()">
+          <div class="chat-logo-mark">⚡</div>
+          Open<span>Squad</span>
+        </div>
+        <div class="active-agents" id="active-agents-header"></div>
+      </div>
+      <div class="chat-header-right">
+        <button class="btn-manage" onclick="goToConnect()">Manage Agents</button>
+        <button class="btn-signout" onclick="doSignout()" title="Sign out">↗ out</button>
+      </div>
+    </div>
+
+    <div class="chat-body" id="chat-body">
+      <div class="chat-inner" id="chat-inner">
+        <div class="chat-welcome" id="chat-welcome">
+          <div class="chat-welcome-icon">⚡</div>
+          <h2>Your squad is ready</h2>
+          <p>Type anything — all connected agents reply at once. Tag <strong>@Claude</strong>, <strong>@Grok</strong> etc. to talk to just one.</p>
+          <div class="welcome-agents" id="welcome-agents"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-inner">
+        <div class="tag-bar" id="tag-bar"></div>
+        <div class="input-wrap">
+          <textarea id="chat-input" placeholder="Message your squad..." rows="1"
+            onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <div class="input-footer">
+          <span class="input-hint"><kbd>Enter</kbd> send · <kbd>Shift+Enter</kbd> newline · <kbd>@</kbd> tag agent</span>
+          <div class="default-wrap">
+            Default:
+            <select id="default-agent">
+              <option value="all">All agents</option>
+              <option value="claude" selected>Claude first</option>
+              <option value="gpt">GPT-4o first</option>
+              <option value="grok">Grok first</option>
+              <option value="gemini">Gemini first</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════════════════════════════
+    // THEME TOGGLE
+    // ══════════════════════════════════════════════════════
+    function toggleDark() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      document.getElementById('theme-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
+      document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    (function () {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const useDark = saved ? saved === 'dark' : prefersDark;
+      document.documentElement.classList.toggle('dark', useDark);
+      document.getElementById('theme-icon').textContent = useDark ? 'light_mode' : 'dark_mode';
+      document.getElementById('theme-label').textContent = useDark ? 'Light' : 'Dark';
+    })();
+
+    // ══════════════════════════════════════════════════════
+    // SUPABASE INIT
+    // ══════════════════════════════════════════════════════
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://kidtboomnmefrhsogsaj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpZHRib29tbm1lZnJoc29nc2FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MTM0NjMsImV4cCI6MjA4NzE4OTQ2M30.oGouP4iW64wQGh4I4VNTrGMklO_iKkhSzOKCOKghqnM'
+    );
+
+    // ══════════════════════════════════════════════════════
+    // STATE
+    // ══════════════════════════════════════════════════════
+    const APP = {
+      user: null,
+      keys: {},
+      active: {},
+      history: {},
+      streaming: false,
+      currentConvId: null
+    };
+
+    // ══════════════════════════════════════════════════════
+    // AGENT CONFIG
+    // ══════════════════════════════════════════════════════
+    const AGENTS = {
+      claude: {
+        label: 'Claude', initials: 'Cl',
+        model: 'claude-opus-4-6',
+        system: `You are Claude in an AI group chat (OpenSquad) alongside GPT-4o, Grok, and Gemini. Lead every response with your conclusion — the answer goes in sentence one, always. No preamble, no warm-ups, no "great question." State your verdict first, reasoning second. 2-4 sentences unless depth is genuinely needed. Thoughtful and precise. No AI disclaimers. Remember and reference everything in this conversation naturally.`,
+        endpoint: 'https://api.anthropic.com/v1/messages',
+        headers: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }),
+        buildBody: (msgs, model) => ({ model, max_tokens: 1024, stream: true, system: msgs[0].content, messages: msgs.slice(1) }),
+        parseChunk: line => { if (!line.startsWith('data: ')) return null; try { const d = JSON.parse(line.slice(6)); return d.type === 'content_block_delta' ? d.delta?.text : null; } catch { return null; } }
+      },
+      gpt: {
+        label: 'GPT-4o', initials: 'GP',
+        model: 'gpt-4o',
+        system: `You are GPT-4o in an AI group chat (OpenSquad) alongside Claude, Grok, and Gemini. Always lead with your conclusion — state what is true or what should be done in sentence one. No setup, no openers. Answer first, support second. 2-4 sentences. Polished and clear. No AI disclaimers. Reference prior conversation naturally.`,
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        headers: k => ({ 'Content-Type': 'application/json', 'Authorization': \`Bearer \${k}\` }),
+        buildBody: (msgs, model) => ({ model, messages: msgs, stream: true, max_tokens: 1024 }),
+        parseChunk: line => { if (!line.startsWith('data: ') || line === 'data: [DONE]') return null; try { const d = JSON.parse(line.slice(6)); return d.choices?.[0]?.delta?.content || null; } catch { return null; } }
+      },
+      grok: {
+        label: 'Grok', initials: 'Gk',
+        model: 'grok-3-latest',
+        system: `You are Grok in an AI group chat (OpenSquad) alongside Claude, GPT-4o, and Gemini. Cut straight to the verdict in sentence one, always. No buildup. Sharp and direct, occasionally sarcastic when earned. Say the thing others won't. 1-3 sentences max. No AI disclaimers. Reference prior conversation naturally.`,
+        endpoint: 'https://api.x.ai/v1/chat/completions',
+        headers: k => ({ 'Content-Type': 'application/json', 'Authorization': \`Bearer \${k}\` }),
+        buildBody: (msgs, model) => ({ model, messages: msgs, stream: true, max_tokens: 1024 }),
+        parseChunk: line => { if (!line.startsWith('data: ') || line === 'data: [DONE]') return null; try { const d = JSON.parse(line.slice(6)); return d.choices?.[0]?.delta?.content || null; } catch { return null; } }
+      },
+      gemini: {
+        label: 'Gemini', initials: 'Gm',
+        model: 'gemini-2.0-flash',
+        system: `You are Gemini in an AI group chat (OpenSquad) alongside Claude, GPT-4o, and Grok. Lead with the finding or recommendation in sentence one — always. Back it immediately with a specific number, comparison, or example. No preamble. Data-grounded and direct. 2-4 sentences. No AI disclaimers. Reference prior conversation naturally.`,
+        endpoint: k => \`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=\${k}\`,
+        headers: () => ({ 'Content-Type': 'application/json' }),
+        buildBody: msgs => ({ system_instruction: { parts: [{ text: msgs[0].content }] }, contents: msgs.slice(1).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })) }),
+        parseChunk: line => { if (!line.startsWith('data: ')) return null; try { const d = JSON.parse(line.slice(6)); return d.candidates?.[0]?.content?.parts?.[0]?.text || null; } catch { return null; } }
+      }
+    };
+
+    const TAG_MAP = {
+      '@claude':'claude','claude,':'claude','claude:':'claude',
+      '@gpt':'gpt','@gpt-4':'gpt','gpt,':'gpt','gpt:':'gpt',
+      '@grok':'grok','grok,':'grok','grok:':'grok',
+      '@gemini':'gemini','gemini,':'gemini','gemini:':'gemini'
+    };
+
+    // ══════════════════════════════════════════════════════
+    // PAGE ROUTING
+    // ══════════════════════════════════════════════════════
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById('page-' + id);
+      if (target) target.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // AUTH
+    // ══════════════════════════════════════════════════════
+    function switchAuth(view) {
+      const views = ['auth-home', 'login', 'signup', 'forgot'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.toggle('hidden', v !== view);
+      });
+
+      const err = document.getElementById('auth-error');
+      if (err) err.style.display = 'none';
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('auth-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value;
+
+      if (!email || !pass) {
+        showAuthError('Please fill in all fields.');
+        return;
+      }
+
+      const btn = document.querySelector('#view-login .auth-primary-btn');
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+      btn.disabled = false;
+      btn.textContent = 'Log In';
+
+      if (error) {
+        showAuthError(error.message);
+        return;
+      }
+
+      APP.user = data.user;
+      await loadUserKeys();
+      showPage('connect');
+    }
+
+    async function doSignup() {
+      const email = document.getElementById('signup-email').value.trim();
+      const pass = document.getElementById('signup-password').value;
+
+      if (!email || !pass) {
+        showAuthError('Please fill in all fields.');
+        return;
+      }
+
+      if (pass.length < 6) {
+        showAuthError('Password must be at least 6 characters.');
+        return;
+      }
+
+      const btn = document.querySelector('#view-signup .auth-primary-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
+
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+
+      if (error) {
+        showAuthError(error.message);
+        return;
+      }
+
+      APP.user = data.user;
+      showToast('Account created! Connect your agents below.');
+      await loadUserKeys();
+      showPage('connect');
+    }
+
+    async function doGoogleLogin() {
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) showAuthError(error.message);
+    }
+
+    async function doResetPassword() {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) {
+        showAuthError('Please enter your email.');
+        return;
+      }
+
+      const btn = document.querySelector('#view-forgot .auth-primary-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
+
+      if (error) {
+        showAuthError(error.message);
+        return;
+      }
+
+      showToast('Password reset link sent.');
+      switchAuth('login');
+    }
+
+    async function doSignout() {
+      await sb.auth.signOut();
+      APP.user = null;
+      APP.keys = {};
+      APP.active = {};
+      APP.history = {};
+      APP.currentConvId = null;
+      switchAuth('auth-home');
+      showPage('home');
+    }
+
+    // ══════════════════════════════════════════════════════
+    // KEY MANAGEMENT
+    // ══════════════════════════════════════════════════════
+    async function loadUserKeys() {
+      if (!APP.user) return;
+
+      document.querySelectorAll('.agent-card').forEach(card => card.classList.remove('connected'));
+      ['claude','gpt','grok','gemini'].forEach(agent => {
+        const badge = document.getElementById('badge-' + agent);
+        if (badge) {
+          badge.textContent = 'NOT CONNECTED';
+          badge.className = 'agent-status-badge idle';
+        }
+        const inp = document.getElementById('input-' + agent);
+        if (inp) inp.placeholder = agent === 'claude' ? 'sk-ant-...' : agent === 'gpt' ? 'sk-...' : agent === 'grok' ? 'xai-...' : 'AIza...';
+      });
+
+      APP.keys = {};
+      APP.active = {};
+
+      const { data } = await sb.from('user_keys').select('provider, api_key').eq('user_id', APP.user.id);
+      if (data) {
+        data.forEach(row => {
+          APP.keys[row.provider] = row.api_key;
+          APP.active[row.provider] = true;
+          markCardConnected(row.provider);
+        });
+      }
+      updateEnterBtn();
+    }
+
+    async function connectAgent(agent) {
+      const input = document.getElementById('input-' + agent);
+      const key = input.value.trim();
+      if (!key) {
+        showToast('Paste your API key first');
+        return;
+      }
+
+      const badge = document.getElementById('badge-' + agent);
+      badge.textContent = 'CHECKING...';
+      badge.className = 'agent-status-badge checking';
+
+      const valid = await validateKey(agent, key);
+
+      if (!valid) {
+        badge.textContent = 'INVALID KEY';
+        badge.className = 'agent-status-badge fail';
+        return;
+      }
+
+      await sb.from('user_keys').upsert({
+        user_id: APP.user.id,
+        provider: agent,
+        api_key: key,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,provider' });
+
+      APP.keys[agent] = key;
+      APP.active[agent] = true;
+      input.value = '';
+      markCardConnected(agent);
+      updateEnterBtn();
+      showToast(`${AGENTS[agent].label} connected ✓`);
+    }
+
+    async function validateKey(agent, key) {
+      try {
+        if (agent === 'claude') {
+          const r = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+            body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
+          });
+          return r.status !== 401;
+        }
+        if (agent === 'gpt') {
+          const r = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ model: 'gpt-4o', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
+          });
+          return r.status !== 401;
+        }
+        if (agent === 'grok') {
+          const r = await fetch('https://api.x.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ model: 'grok-3-latest', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] })
+          });
+          return r.status !== 401;
+        }
+        if (agent === 'gemini') {
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] })
+          });
+          return r.status !== 400 && r.status !== 403;
+        }
+      } catch {
+        return false;
+      }
+      return false;
+    }
+
+    function markCardConnected(agent) {
+      const card = document.querySelector(`.agent-card[data-agent="${agent}"]`);
+      const badge = document.getElementById('badge-' + agent);
+      if (card) card.classList.add('connected');
+      if (badge) {
+        badge.textContent = 'CONNECTED';
+        badge.className = 'agent-status-badge ok';
+      }
+      const inp = document.getElementById('input-' + agent);
+      if (inp) inp.placeholder = '••••••••••• (saved)';
+    }
+
+    function updateEnterBtn() {
+      const connected = Object.keys(APP.keys).length > 0;
+      const btn = document.getElementById('btn-enter-chat');
+      btn.classList.toggle('ready', connected);
+    }
+
+    function enterChat() {
+      if (Object.keys(APP.keys).length === 0) return;
+      buildChatHeader();
+      buildWelcomeAgents();
+      buildTagBar();
+      showPage('chat');
+      document.getElementById('chat-input').focus();
+    }
+
+    function goToConnect() {
+      showPage('connect');
+    }
+
+    // ══════════════════════════════════════════════════════
+    // CHAT HEADER & WELCOME
+    // ══════════════════════════════════════════════════════
+    function buildChatHeader() {
+      const wrap = document.getElementById('active-agents-header');
+      wrap.innerHTML = '';
+      Object.keys(APP.keys).forEach(agent => {
+        const cfg = AGENTS[agent];
+        const pip = document.createElement('div');
+        pip.className = 'active-agent-pip';
+        pip.dataset.agent = agent;
+        pip.innerHTML = `<span class="pip-dot"></span>${cfg.label}`;
+        pip.onclick = () => {
+          APP.active[agent] = !APP.active[agent];
+          pip.classList.toggle('off', !APP.active[agent]);
+        };
+        if (!APP.active[agent]) pip.classList.add('off');
+        wrap.appendChild(pip);
+      });
+    }
+
+    function buildWelcomeAgents() {
+      const wrap = document.getElementById('welcome-agents');
+      wrap.innerHTML = '';
+      Object.keys(APP.keys).forEach(agent => {
+        const tag = document.createElement('span');
+        tag.className = `welcome-agent-tag ${agent}`;
+        tag.textContent = AGENTS[agent].label;
+        wrap.appendChild(tag);
+      });
+    }
+
+    function buildTagBar() {
+      const bar = document.getElementById('tag-bar');
+      bar.innerHTML = '';
+      Object.keys(APP.keys).forEach(agent => {
+        const chip = document.createElement('div');
+        chip.className = 'tag-chip';
+        chip.dataset.agent = agent;
+        chip.textContent = `@${AGENTS[agent].label}`;
+        chip.onclick = () => insertTag(AGENTS[agent].label);
+        bar.appendChild(chip);
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // INPUT
+    // ══════════════════════════════════════════════════════
+    function handleInput(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+      const hasAt = el.value.includes('@');
+      document.getElementById('tag-bar').classList.toggle('visible', hasAt);
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function insertTag(name) {
+      const inp = document.getElementById('chat-input');
+      inp.value = inp.value.replace(/@\w*$/, '') + `@${name} `;
+      inp.focus();
+      document.getElementById('tag-bar').classList.remove('visible');
+    }
+
+    function detectTag(text) {
+      const lower = text.toLowerCase().trim();
+      for (const [tag, agent] of Object.entries(TAG_MAP)) {
+        if ((lower.startsWith(tag) || lower.includes(' ' + tag)) && APP.keys[agent]) return agent;
+      }
+      return null;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // SEND MESSAGE
+    // ══════════════════════════════════════════════════════
+    async function sendMessage() {
+      const inp = document.getElementById('chat-input');
+      const text = inp.value.trim();
+      if (!text || APP.streaming) return;
+
+      APP.streaming = true;
+      document.getElementById('send-btn').disabled = true;
+      inp.value = '';
+      inp.style.height = 'auto';
+      document.getElementById('tag-bar').classList.remove('visible');
+
+      const w = document.getElementById('chat-welcome');
+      if (w) w.remove();
+
+      appendUserBubble(text);
+
+      if (!APP.currentConvId) await startConversation(text);
+      await saveMessage('user', null, text);
+
+      const tagged = detectTag(text);
+      let agents;
+      if (tagged) {
+        agents = [tagged];
+        appendSysNote(`→ directed to ${AGENTS[tagged].label} only`);
+      } else {
+        const pref = document.getElementById('default-agent').value;
+        const all = Object.keys(APP.keys).filter(a => APP.active[a]);
+        agents = pref !== 'all' && APP.keys[pref] && APP.active[pref]
+          ? [pref, ...all.filter(a => a !== pref)]
+          : all;
+      }
+
+      if (agents.length === 0) {
+        showToast('No active agents — toggle one on in the header');
+        APP.streaming = false;
+        document.getElementById('send-btn').disabled = false;
+        return;
+      }
+
+      agents.forEach(agent => {
+        if (!APP.history[agent]) APP.history[agent] = [];
+        if (APP.history[agent].length === 0)
+          APP.history[agent].push({ role: 'system', content: AGENTS[agent].system });
+        APP.history[agent].push({ role: 'user', content: text });
+      });
+
+      const promises = agents.map((agent, i) => new Promise(resolve => {
+        setTimeout(async () => {
+          createTyping(agent);
+          await streamAgent(agent);
+          resolve();
+        }, i * 2500);
+      }));
+
+      await Promise.allSettled(promises);
+      APP.streaming = false;
+      document.getElementById('send-btn').disabled = false;
+      document.getElementById('chat-input').focus();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // STREAM
+    // ══════════════════════════════════════════════════════
+    async function streamAgent(agent) {
+      const cfg = AGENTS[agent];
+      const key = APP.keys[agent];
+      const t0 = Date.now();
+
+      try {
+        const endpoint = typeof cfg.endpoint === 'function' ? cfg.endpoint(key) : cfg.endpoint;
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: cfg.headers(key),
+          body: JSON.stringify(cfg.buildBody(APP.history[agent].slice(), cfg.model))
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        removeTyping(agent);
+        const bubble = createStreamRow(agent);
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+        let full = '', buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n');
+          buf = lines.pop();
+          for (const line of lines) {
+            const token = cfg.parseChunk(line.trim());
+            if (token) {
+              full += token;
+              bubble.innerHTML = esc(full) + `<span class="stream-cursor"></span>`;
+              scrollBottom();
+            }
+          }
+        }
+
+        bubble.innerHTML = esc(full);
+        const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+        finalizeRow(agent, elapsed);
+        APP.history[agent].push({ role: 'assistant', content: full });
+        await saveMessage('assistant', agent, full);
+        scrollBottom();
+      } catch (err) {
+        removeTyping(agent);
+        appendErrBubble(agent, err.message);
+      }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // DOM HELPERS
+    // ══════════════════════════════════════════════════════
+    function esc(s) {
+      return s
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/\n/g,'<br>');
+    }
+
+    function scrollBottom() {
+      const b = document.getElementById('chat-body');
+      b.scrollTop = b.scrollHeight;
+    }
+
+    function appendUserBubble(text) {
+      const ci = document.getElementById('chat-inner');
+      const d = document.createElement('div');
+      d.className = 'msg-row user';
+      d.innerHTML = `<div class="bubble">${esc(text)}</div><div class="msg-time" style="margin-top:4px;padding:0 2px;">${fmtTime(Date.now())}</div>`;
+      ci.appendChild(d);
+      scrollBottom();
+    }
+
+    function appendSysNote(txt) {
+      const ci = document.getElementById('chat-inner');
+      const d = document.createElement('div');
+      d.className = 'sys-note';
+      d.textContent = txt;
+      ci.appendChild(d);
+      scrollBottom();
+    }
+
+    function createTyping(agent) {
+      const ci = document.getElementById('chat-inner');
+      const cfg = AGENTS[agent];
+      const d = document.createElement('div');
+      d.className = 'typing-row';
+      d.dataset.agent = agent;
+      d.id = `typing-${agent}`;
+      d.innerHTML = `<div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div><div class="typing-bubble"><span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span></div>`;
+      ci.appendChild(d);
+      scrollBottom();
+    }
+
+    function removeTyping(agent) {
+      const el = document.getElementById(`typing-${agent}`);
+      if (el) el.remove();
+    }
+
+    function createStreamRow(agent) {
+      removeTyping(agent);
+      const ci = document.getElementById('chat-inner');
+      const cfg = AGENTS[agent];
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      row.dataset.agent = agent;
+      row.id = `stream-row-${agent}`;
+      row.innerHTML = `
+        <div class="msg-meta">
+          <div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div>
+          <span class="msg-sender">${cfg.label}</span>
+          <span class="msg-time" id="stream-time-${agent}">${fmtTime(Date.now())}</span>
+        </div>
+        <div class="bubble" id="stream-bubble-${agent}"><span class="stream-cursor"></span></div>`;
+      ci.appendChild(row);
+      scrollBottom();
+      return document.getElementById(`stream-bubble-${agent}`);
+    }
+
+    function finalizeRow(agent, elapsed) {
+      const t = document.getElementById(`stream-time-${agent}`);
+      if (t) t.textContent += ` · ${elapsed}s`;
+      const r = document.getElementById(`stream-row-${agent}`);
+      if (r) r.removeAttribute('id');
+    }
+
+    function appendErrBubble(agent, msg) {
+      const ci = document.getElementById('chat-inner');
+      const cfg = AGENTS[agent];
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      row.dataset.agent = agent;
+      row.innerHTML = `
+        <div class="msg-meta">
+          <div class="agent-avatar" data-agent="${agent}">${cfg.initials}</div>
+          <span class="msg-sender">${cfg.label}</span>
+        </div>
+        <div class="bubble" style="color:var(--text3);font-size:13px;font-style:italic;">⚠ ${esc(msg)}</div>`;
+      ci.appendChild(row);
+      scrollBottom();
+    }
+
+    function fmtTime(ts) {
+      return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ══════════════════════════════════════════════════════
+    // DATABASE — CONVERSATIONS & MESSAGES
+    // ══════════════════════════════════════════════════════
+    async function startConversation(firstMsg) {
+      const title = firstMsg.slice(0, 60);
+      const { data } = await sb.from('conversations').insert({
+        user_id: APP.user.id,
+        title
+      }).select().single();
+      if (data) APP.currentConvId = data.id;
+    }
+
+    async function saveMessage(role, agent, content) {
+      if (!APP.currentConvId || !APP.user) return;
+      await sb.from('messages').insert({
+        conversation_id: APP.currentConvId,
+        user_id: APP.user.id,
+        role,
+        agent,
+        content
+      });
+    }
+
+    // ══════════════════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════════════════
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        APP.user = session.user;
+        await loadUserKeys();
+        showPage('connect');
+      } else {
+        switchAuth('auth-home');
+        showPage('home');
+      }
+    })();
+  </script>
 </body>
 </html>
